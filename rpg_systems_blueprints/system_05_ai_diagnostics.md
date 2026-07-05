@@ -83,3 +83,31 @@ flowchart TB
 12:59:10,3,82.7,29.1,43"
 }
 ```
+
+---
+
+## 🎨 Visual Component & Animation Specifications
+
+### 1. AI Chat Console Window (`rpg_chat_console`)
+* **Styling and Borders:** Glassmorphic card design with dark overlays, border-radii (`12px`), and customized scrollbars (`#1B4965` thumb track).
+* **Avatar Specifications:**
+  * **System Advisor (Bot):** Displays a rotating circuit gear icon (`#3498DB`) pulsing when processing queries.
+  * **User (Student):** Displays a stylized robot head icon (`#F1C40F`).
+* **Typing Indicator Dots:** When a query is processing, three loading dots bounce sequentially:
+  ```css
+  .chat-typing-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #3498DB;
+    border-radius: 50%;
+    animation: typingPulse 1.0s infinite alternate;
+  }
+  @keyframes typingPulse {
+    0% { transform: translateY(0px); opacity: 0.3; }
+    100% { transform: translateY(-6px); opacity: 1.0; }
+  }
+  ```
+
+### 2. Live Telemetry Heatmap HUD Overlay
+* **Visual Component:** High-temperature zones are drawn as translucent red gradients (`rgba(231, 76, 60, 0.15)`) blending into blue cooling lines (`rgba(52, 152, 219, 0.2)`).
+* **Fault Warning HUD Icon:** Flashing hazard warning triangles display on-screen during severe faults.

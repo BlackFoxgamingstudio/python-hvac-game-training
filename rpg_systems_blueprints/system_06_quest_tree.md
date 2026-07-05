@@ -82,3 +82,33 @@ flowchart TB
 ### 2. User State Progression Table
 * **Level 1:** Requirements: Complete Thermostat variables challenge. Unlocks Level 2.
 * **Level 8:** Requirements: Complete final HVAC simulation challenge. Unlocks Certified Smart Building Control Systems Specialist title.
+
+---
+
+## 🎨 Visual Component & Animation Specifications
+
+### 1. Quest Inventory grid (`rpg_inventory`)
+* **Slot Layout:** A $4 \times 2$ grid containing items. Each slot is a $48 \times 48$ pixel container with `#2C3E50` borders.
+* **Visual Components:**
+  * Refriger Cylinder: Steel gray canister.
+  * EEV Valve: Brass stepper body icon.
+  * Digital Multimeter: Orange and black test tool.
+* **Gold Shine Hover Effect:** Hovering over an item applies a golden shine animation (`#F1C40F`) reflecting light across the slot:
+  ```css
+  .inventory-slot:hover::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(241, 196, 15, 0.4), transparent);
+    animation: goldShine 0.8s ease-in-out;
+  }
+  @keyframes goldShine {
+    100% { left: 150%; }
+  }
+  ```
+
+### 2. Dialogue Narrative Box (`rpg_dialogue_box`)
+* **Visual Component:** Large glassmorphic container spanning the bottom of the canvas screen (`rgba(11, 19, 43, 0.85)`).
+* **Typewriter Effect:** Text characters render sequentially. Letters are printed one-by-one every $30	ext{ms}$ using intervals to simulate real-time speech.
+* **Choice Buttons:** Hovering over choice selections glows them bright cyan (`#00B4D8`) with smooth CSS scaling transitions.

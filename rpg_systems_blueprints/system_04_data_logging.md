@@ -72,3 +72,24 @@ To ensure student code executing inside Pyodide can read and write files reliabl
 class VirtualFS:
     _files = {} # Keyed by file path, contains raw string buffers
 ```
+
+---
+
+## 🎨 Visual Component & Animation Specifications
+
+### 1. BAS Log Spreadsheet Table (`rpg_bas_table`)
+* **Styling Theme:** Sleek dark slate grid layout with `#1C2541` borders and `#0B132B` alternating row backgrounds.
+* **Alarm Flash Effect:** If any telemetry log contains a `status` of `FAULT` (e.g. frozen coil), the table row displays a pulsing red outline (`rgba(231, 76, 60, 0.4)`) using keyframe transitions.
+* **Row Append Highlight:** When a new row is appended, the row background glows green (`#27AE60`) and slowly fades to the default background color over $2.0$ seconds:
+  ```css
+  @keyframes rowInsertFlash {
+    from { background-color: rgba(39, 174, 96, 0.5); }
+    to { background-color: transparent; }
+  }
+  ```
+
+### 2. VirtualFS Storage Space Monitor Gauge
+* **Visual Component:** A progress bar showing virtual space usage.
+* **Activity Indicator LEDs:** Two round status indicator circles:
+  * **Read Indicator (Blue):** Blinks green-blue (`#3498DB`) when a script calls `read()` or `readlines()`.
+  * **Write Indicator (Green):** Blinks neon-green (`#2ECC71`) when a script calls `write()` or `writelines()`.

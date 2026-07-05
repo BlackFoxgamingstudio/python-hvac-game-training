@@ -82,12 +82,33 @@ $$Q_{refrigerant} = \dot{m} \cdot (h_{suction\_gas} - h_{evap\_in})$$
 
 ---
 
-## 🎮 Game Objects and Specifications
+## 🎨 Visual Component & Animation Specifications
 
-### 1. Scroll Compressor Core (`rpg_comp_core`)
-* **Amperage Draw Formula:** $I = (CR \cdot 1.8) + (displacement \cdot 0.15)$.
-* **Visual Quality:** 16-frame rotative animation displaying crankshaft motion and dynamic heat glows.
+### 1. Scroll Compressor Core Sprite (`rpg_comp_core`)
+* **Physical Render Frame size:** $64 \times 64$ pixels.
+* **Rotational Rendering Calculations:** The crankshaft rendering angle ($\theta$) increments in the draw loop based on the frequency ($f$ in Hz):
+  $$\theta_{next} = (\theta_{current} + f \cdot 0.10) \pmod{2\pi}$$
+* **Heat-Haze Shader Effect:** When the compressor's thermal state exceeds $140^\circ\text{F}$, a heat-haze canvas filter applies a sine-wave displacement to the rendering rows:
+  $$x_{offset} = \sin(y \cdot 0.25 + frameCount \cdot 0.15) \cdot 2.5$$
+* **Sprite Sheets Configuration:**
+  * Frames 0–3: Low-contrast blue glow, static pistons.
+  * Frames 4–11: Shaft rotating, yellow copper coil windings pulse intensity.
+  * Frames 12–15: Vibrational offset shuddering, sparks ejecting from terminals.
 
-### 2. Electronic Expansion Valve (`rpg_eev_actuator`)
-* **Throttling Range:** 0 to 500 step increments.
-* **Control Output:** Decoupled flow coefficient output variable updated at 1.0 Hz by the PID control loop.
+### 2. Condenser Fan assembly (`rpg_cond_fan`)
+* **Physical Render Frame size:** $48 \times 48$ pixels.
+* **Rotational Motion Blur:** Drawn using three layered semi-transparent fan blade polygons at offset alphas (0.2, 0.4, 0.7) to represent blade speed.
+* **Airflow Indicator Particles:** Warm exhaust air is drawn as red translucent smoke squares ($4 \times 4$ pixels) spawning at the outlet and drifting vertically with an upward velocity ($v_y = -3 \text{ pixels/frame}$).
+
+### 3. Electronic Expansion Valve (EEV) Stepper Actuator (`rpg_eev_actuator`)
+* **Physical Render Frame size:** $48 \times 48$ pixels.
+* **Needle Throttle Vector:** The needle coordinates ($y_{needle}$) move dynamically between the closed position ($y = 12$) and open position ($y = 28$):
+  $$y_{needle} = 12 + \left(\frac{N_{steps}}{500}\right) \cdot 16$$
+* **Flash Gas Vaporization Particles:** Sprays ice-blue particles (`#EBF5FB`) into the evaporator inlet. The particle density matches the EEV steps.
+
+### 4. Evaporator Coil Assembly (`rpg_evap_coil`)
+* **Physical Render Frame size:** $64 \times 48$ pixels.
+* **Frost Overlay Shader:** Ice opacity ($\alpha_{frost}$) increases as frost depth ($t_{frost}$) builds:
+  $$\alpha_{frost} = \min\left(1.0, \frac{t_{frost}}{5.0}\right)$$
+  Drawn as a white textured mask over the copper tubes.
+* **Ice Crystal Generation:** When $\alpha_{frost} > 0.6$, the engine renders small white triangles ($3 \times 3$ pixels) on the boundaries of the aluminum fins.

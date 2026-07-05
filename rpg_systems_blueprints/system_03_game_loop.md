@@ -63,3 +63,30 @@ if (mapGrid[tileY][tileX] === 1) {
   // Prevent movement (revert coordinates to previous step frame)
 }
 ```
+
+---
+
+## 🎨 Visual Component & Animation Specifications
+
+### 1. Player Robot Sprite (`rpg_player_robot`)
+* **Physical Render Frame size:** $32 \times 48$ pixels.
+* **4-Directional Movement Animation:** Walk cycle consists of $8$ frames per direction:
+  * Rows: $0$ (South), $1$ (West), $2$ (East), $3$ (North).
+  * Frame index increments by $1$ every $5$ ticks during movement:
+    $$\text{frameIndex} = \left( \lfloor \text{ticks} / 5 \rfloor \right) \bmod 8$$
+* **Friction Dust Particles:** When the player runs (pressing Shift), the engine spawns dust particles (`#7F8C8D`) at the player's feet, drifting away from the velocity vector.
+* **Thermal Warning Icon Overlay:** If the room temperature exceeds $85^\circ\text{F}$, a flashing red warning thermometer icon pulses above the robot's head.
+
+### 2. Tile Map Grid Assets (`rpg_tile_map`)
+* **Tile Resolution:** $32 \times 32$ pixels.
+* **Visual Components:**
+  * Concrete Floors (`#34495E` with noise textures).
+  * High-Voltage Panels (drawn with warning signs and hazard borders).
+  * Steel Grating tiles showing pipes running underneath.
+* **Shadow Projection:** Wall objects cast dynamic drop shadows. The shadow boundary polygon is drawn with a semi-transparent black overlay:
+  $$\alpha_{shadow} = 0.35$$
+
+### 3. Glassmorphic Simulation HUD Overlay
+* **Visual Layout:** Sidebar dashboard panels with translucent backgrounds (`rgba(13, 27, 42, 0.6)`) and blurred backdrops (`backdrop-filter: blur(10px)`).
+* **Sweeping Gauge Dial:** Telemetry needle rotations are interpolated smoothly using:
+  $$\theta_{needle} = \theta_{old} + (\theta_{target} - \theta_{old}) \cdot 0.15$$

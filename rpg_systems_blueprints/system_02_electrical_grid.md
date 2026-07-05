@@ -76,3 +76,25 @@ To prevent compressor damage from rapid restarts, an anti-short-cycle timer asse
 if compressor_off_time < 300: # 5 minutes cooldown
     prevent_compressor_restart = True
 ```
+
+---
+
+## 🎨 Visual Component & Animation Specifications
+
+### 1. Power Distribution Board (`rpg_power_board`)
+* **Physical Render Frame size:** $96 \times 64$ pixels.
+* **Bus Bar Render Specification:** Draws solid copper bus bars using `#D35400` with gold highlights (`#F1C40F`).
+* **Active Arcing Particles:** During system overloads or short-circuits, electric spark particles ($1 \times 3$ pixels) are projected outward radially:
+  $$x = x_{source} + \cos(\phi) \cdot r, \quad y = y_{source} + \sin(\phi) \cdot r$$
+  Where $\phi$ is a random angle $[0, 2\pi]$ and $r$ expands exponentially per frame.
+
+### 2. Magnetic Contactor Relay (`rpg_contactor`)
+* **Physical Render Frame size:** $32 \times 32$ pixels.
+* **Solenoid Actuation Animation:** The armature block moves vertically downward by $4$ pixels when energized (Y1 active), drawing contact links together.
+* **Contact Arcing Arc Spark:** A bright yellow/white flash (`#FFFFFF` background, `#F1C40F` stroke) is drawn at the contact pads for $3$ frames upon engagement to simulate contact closure.
+* **Corrosion Overlay:** An overlay of brown/green sulfur corrosion (`#58D68D`) displays over the contact points when contact resistance exceeds $1.5 \, \Omega$.
+
+### 3. Step-down transformer (`rpg_transformer`)
+* **Physical Render Frame size:** $48 \times 48$ pixels.
+* **Coil Winding Pattern:** Renders copper primary and secondary coil winding wraps.
+* **Overheating Thermal Glow:** Transformer housing glows red when primary current exceeds 120% of nominal.
