@@ -2,13 +2,65 @@
 
 Detailed specifications for the canvas layout coordinates, borders, text metrics, and animation keyframes for the AI Chat Console HUD, BAS Log Table, and Dialogue Cutscenes.
 
-## 🗺️ Layout Coordinate Grid
+## 🗺️ Layout Coordinate Grid Segmentation & Dial Sweeping
 
 ```mermaid
 flowchart TB
-    Canvas["640 x 480 Game Canvas"] --> GameViewport["Top Section: Game Viewport <br/> (0, 0) to (640, 320)"]
-    Canvas --> DialogueViewport["Bottom Section: Dialogue Console HUD <br/> (0, 320) to (640, 480)"]
-    Canvas --> SidebarHUD["Right Section: Glassmorphic Telemetry Hud <br/> (480, 0) to (640, 320)"]
+    %% Subgraph 1: Canvas Viewport Partitioning
+    subgraph ViewportPartition ["1. Canvas Layout Divisions (640x480)"]
+        direction TB
+        GameArea["Game Viewport region <br/> (x: 0 to 640, y: 0 to 320)"]
+        HUDOverlay["Sidebar Telemetry HUD <br/> (x: 480 to 640, y: 0 to 320)"]
+        DialogConsole["Dialogue Box Console <br/> (x: 0 to 640, y: 320 to 480)"]
+    end
+
+    %% Subgraph 2: Sweeping Telemetry needle Interpolation
+    subgraph HUDNeedle ["2. Sweeping Gauge Dial Interpolator"]
+        direction TB
+        GaugeCenter["Dial Center Anchor <br/> (x_center = 560, y_center = 80)"]
+        GaugeAngle["Interpolate Needle Angle <br/> (theta = theta_old + (theta_target - theta_old)*0.15)"]
+        NeedleCoords["Compute Sweep Tip Position <br/> (x_tip = 560 + cos(theta)*30, y_tip = 80 + sin(theta)*30)"]
+        
+        GaugeCenter --> GaugeAngle
+        GaugeAngle --> NeedleCoords
+    end
+
+    %% Subgraph 3: Dialogue Typewriter String Buffer
+    subgraph TypewriterBuffer ["3. Dialogue Text Typewriter Buffer"]
+        direction TB
+        TextString["Load Narrative String <br/> (e.g. Dialogue line array)"]
+        TickCounter["Increment Char Counter <br/> (index = floor(frame_ticks / 2))"]
+        Substr["Generate Substring to print <br/> (draw_text = string.substring(0, index))"]
+        
+        TextString --> TickCounter
+        TickCounter --> Substr
+    end
+
+    %% Subgraph 4: AI Chat Console UI Layout
+    subgraph ChatConsoleLayout ["4. AI Chat Console Layout Grid"]
+        direction TB
+        CardOffset["User Message Card Box <br/> (x: 20, y: 345, width: 600)"]
+        BotCardOffset["Assistant Reply Card Box <br/> (x: 20, y: 375, width: 600)"]
+        TypingDots["Pulsing Typing Bubble Dots <br/> (y_dot = y_base + sin(ticks*0.2)*4)"]
+        CursorCaret["Flashing Command Caret <br/> (Draw if floor(ticks/30) % 2 == 0)"]
+    end
+
+    %% Connections
+    NeedleCoords -- "Vector draw coordinates" --> HUDOverlay
+    Substr -- "Render text characters" --> DialogConsole
+    TypingDots -- "Drawing loop coordinates" --> BotCardOffset
+    CursorCaret -- "Caret visibility status" --> CardOffset
+
+    %% Visual Styles
+    classDef partition fill:#2a1a1f,stroke:#ff5a00,stroke-width:2px,color:#fff;
+    classDef needle fill:#0a192f,stroke:#172a45,stroke-width:2px,color:#fff;
+    classDef text fill:#160f29,stroke:#5f506b,stroke-width:2px,color:#fff;
+    classDef chat fill:#001524,stroke:#fca311,stroke-width:2px,color:#fff;
+    
+    class GameArea,HUDOverlay,DialogConsole partition;
+    class GaugeCenter,GaugeAngle,NeedleCoords needle;
+    class TextString,TickCounter,Substr text;
+    class CardOffset,BotCardOffset,TypingDots,CursorCaret chat;
 ```
 
 ---
@@ -29,7 +81,7 @@ flowchart TB
 * **Visual HUD:** Positioned directly on top of active component cards. Glow borders change color dynamically based on telemetry values.
 
 ---
-### HUD & Dialogue Visuals Frame Rendering Spec Node 1
+### HUD & Dialogue Visuals Frame Specification Detail Node 1
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -37,7 +89,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 2
+### HUD & Dialogue Visuals Frame Specification Detail Node 2
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -45,7 +97,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 3
+### HUD & Dialogue Visuals Frame Specification Detail Node 3
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -53,7 +105,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 4
+### HUD & Dialogue Visuals Frame Specification Detail Node 4
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -61,7 +113,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 5
+### HUD & Dialogue Visuals Frame Specification Detail Node 5
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -69,7 +121,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 6
+### HUD & Dialogue Visuals Frame Specification Detail Node 6
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -77,7 +129,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 7
+### HUD & Dialogue Visuals Frame Specification Detail Node 7
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -85,7 +137,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 8
+### HUD & Dialogue Visuals Frame Specification Detail Node 8
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -93,7 +145,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 9
+### HUD & Dialogue Visuals Frame Specification Detail Node 9
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -101,7 +153,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 10
+### HUD & Dialogue Visuals Frame Specification Detail Node 10
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -109,7 +161,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 11
+### HUD & Dialogue Visuals Frame Specification Detail Node 11
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -117,7 +169,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 12
+### HUD & Dialogue Visuals Frame Specification Detail Node 12
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -125,7 +177,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 13
+### HUD & Dialogue Visuals Frame Specification Detail Node 13
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -133,7 +185,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 14
+### HUD & Dialogue Visuals Frame Specification Detail Node 14
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -141,7 +193,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 15
+### HUD & Dialogue Visuals Frame Specification Detail Node 15
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -149,7 +201,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 16
+### HUD & Dialogue Visuals Frame Specification Detail Node 16
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -157,7 +209,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 17
+### HUD & Dialogue Visuals Frame Specification Detail Node 17
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -165,7 +217,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 18
+### HUD & Dialogue Visuals Frame Specification Detail Node 18
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -173,7 +225,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 19
+### HUD & Dialogue Visuals Frame Specification Detail Node 19
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -181,7 +233,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 20
+### HUD & Dialogue Visuals Frame Specification Detail Node 20
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -189,7 +241,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 21
+### HUD & Dialogue Visuals Frame Specification Detail Node 21
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -197,7 +249,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 22
+### HUD & Dialogue Visuals Frame Specification Detail Node 22
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -205,7 +257,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 23
+### HUD & Dialogue Visuals Frame Specification Detail Node 23
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -213,7 +265,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 24
+### HUD & Dialogue Visuals Frame Specification Detail Node 24
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -221,7 +273,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 25
+### HUD & Dialogue Visuals Frame Specification Detail Node 25
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -229,7 +281,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 26
+### HUD & Dialogue Visuals Frame Specification Detail Node 26
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -237,7 +289,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 27
+### HUD & Dialogue Visuals Frame Specification Detail Node 27
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -245,7 +297,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 28
+### HUD & Dialogue Visuals Frame Specification Detail Node 28
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -253,7 +305,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 29
+### HUD & Dialogue Visuals Frame Specification Detail Node 29
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -261,7 +313,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 30
+### HUD & Dialogue Visuals Frame Specification Detail Node 30
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -269,7 +321,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 31
+### HUD & Dialogue Visuals Frame Specification Detail Node 31
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -277,7 +329,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 32
+### HUD & Dialogue Visuals Frame Specification Detail Node 32
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -285,7 +337,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 33
+### HUD & Dialogue Visuals Frame Specification Detail Node 33
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -293,7 +345,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 34
+### HUD & Dialogue Visuals Frame Specification Detail Node 34
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -301,7 +353,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### HUD & Dialogue Visuals Frame Rendering Spec Node 35
+### HUD & Dialogue Visuals Frame Specification Detail Node 35
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Glassmorphic Sidebar HUD object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 

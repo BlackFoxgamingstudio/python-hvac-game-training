@@ -2,14 +2,69 @@
 
 Detailed specifications for the frame-by-frame canvas coordinate drawings, sprite sheet layouts, and pixel animations for the Scroll Compressor Core and Electronic Expansion Valve (EEV).
 
-## 🗺️ Rendering Coordinate Pipeline
+## 🗺️ Rendering Coordinate Pipeline & Sheet Offsets
 
 ```mermaid
-flowchart LR
-    State["Refrigerant variables state"] --> RenderCoords["Map Coordinates: X, Y bounds"]
-    RenderCoords --> FrameIndex["Calculate Frame Index (Ticks % Frame Count)"]
-    FrameIndex --> DrawSprite["Canvas context.drawImage(Sheet, xSrc, ySrc)"]
-    DrawSprite --> ShaderApply["Apply Filter Shaders (Glows, Shudders)"]
+flowchart TB
+    %% Subgraph 1: Canvas Coordinate Transformer
+    subgraph CoordinateTransformer ["1. Canvas Viewport Coordinate Transformer"]
+        direction TB
+        WorldCoords["World Position (x_world, y_world)"] --> CamOffset["Apply Camera Scroll Offset <br/> (x_view = x_world - cam_x, y_view = y_world - cam_y)"]
+        CamOffset --> ScaleFactor["Apply Pixel Scale Multiplier <br/> (Scale = 2.0 for Pixel Art)"]
+        ScaleFactor --> TargetAnchor["Compute Canvas Bounding Box Anchors"]
+    end
+
+    %% Subgraph 2: Scroll Compressor Sprite Sheet Offset Mapping
+    subgraph CompressorSheet ["2. Scroll Compressor Sheet Offset Mappings"]
+        direction TB
+        CompFrame["Calculate Active Frame Index <br/> (frame = Math.floor(ticks / 5) % 8)"]
+        CompFrame --> XOffset["Compute Source X Offset <br/> (src_x = (frame % columns) * width)"]
+        CompFrame --> YOffset["Compute Source Y Offset <br/> (src_y = Math.floor(frame / columns) * height)"]
+        
+        XOffset --> ShudderCalc["Apply Overload Shudder Offset <br/> (x_view += rand(-1, 1) * intensity)"]
+        YOffset --> ShudderCalc
+    end
+
+    %% Subgraph 3: EEV Needle Math & Stepper Actuator
+    subgraph EEVNeedleMath ["3. EEV Stepper Valve Orifice Vector Mappings"]
+        direction TB
+        ValveSteps["Active Stepper Position (Steps: 0 to 500)"]
+        ValveSteps --> NeedleHeight["Compute Needle Depth Y Coordinate <br/> (y_needle = 12 + (steps/500) * 16)"]
+        ValveSteps --> StepAngle["Compute Stepper Shaft Rotation Angle <br/> (theta = (steps % 24) * 15°)"]
+        
+        NeedleHeight --> GasFlow["Calculate Flash Gas Particle Velocity <br/> (vx = flow_factor * random_vel)"]
+        StepAngle --> GasFlow
+    end
+
+    %% Subgraph 4: Double-Buffered Draw Operations
+    subgraph CanvasDraw ["4. Double-Buffered Canvas Context Draw"]
+        direction TB
+        DrawComp["context.drawImage(CompressorSheet, src_x, src_y, 64, 64, x_view, y_view, 128, 128)"]
+        DrawEEV["context.drawImage(EEVSheet, src_x, src_y, 48, 48, x_view, y_view, 96, 96)"]
+        ParticleDraw["context.fillRect(p_x, p_y, 2, 2)"]
+        FlipBuffer["Flip Frame to Screen buffer"]
+        
+        DrawComp --> DrawEEV
+        DrawEEV --> ParticleDraw
+        ParticleDraw --> FlipBuffer
+    end
+
+    %% Connections
+    TargetAnchor -- "Target coordinates" --> DrawComp
+    TargetAnchor -- "Target coordinates" --> DrawEEV
+    ShudderCalc -- "Adjusted offset coordinates" --> DrawComp
+    GasFlow -- "Particle arrays" --> ParticleDraw
+
+    %% Visual Styles
+    classDef wasm fill:#1f1a24,stroke:#ff0055,stroke-width:2px,color:#fff;
+    classDef ast fill:#0f1d2a,stroke:#3a86c8,stroke-width:2px,color:#fff;
+    classDef assert fill:#0b221e,stroke:#38b000,stroke-width:2px,color:#fff;
+    classDef sync fill:#1b1b1e,stroke:#fca311,stroke-width:2px,color:#fff;
+    
+    class WorldCoords,CamOffset,ScaleFactor,TargetAnchor wasm;
+    class CompFrame,XOffset,YOffset,ShudderCalc ast;
+    class ValveSteps,NeedleHeight,StepAngle,GasFlow assert;
+    class DrawComp,DrawEEV,ParticleDraw,FlipBuffer sync;
 ```
 
 ---
@@ -23,7 +78,7 @@ flowchart LR
 * **State Machine Frame Map:**
   * **Frames 0–3 (Idle State):** Static blue LED (`#2980B9`) at position `(x=282, y=212)`.
   * **Frames 4–11 (Running Nominal):** Shaft rotation indicators moving clockwise. Coil windings glow yellow (`#F1C40F`).
-  * **Frames 12–15 (Overload Fault):** Cylinder glows red (`#E74C3C`). Bounding box shudders by $\\pm 1\\text{px}$ every tick.
+  * **Frames 12–15 (Overload Fault):** Cylinder glows red (`#E74C3C`). Bounding box shudders by $\pm 1\text{px}$ every tick.
 
 ### 2. Electronic Expansion Valve Sprite (`rpg_eev_actuator`)
 * **Grid Layout:** $6 \times 2$ sprite grid.
@@ -35,7 +90,7 @@ flowchart LR
   * **Frames 8–11 (Wide Open):** Needle retracted. Dense blue liquid stream flows.
 
 ---
-### Compressor & EEV Visuals Frame Rendering Spec Node 1
+### Compressor & EEV Visuals Frame Specification Detail Node 1
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -43,7 +98,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 2
+### Compressor & EEV Visuals Frame Specification Detail Node 2
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -51,7 +106,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 3
+### Compressor & EEV Visuals Frame Specification Detail Node 3
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -59,7 +114,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 4
+### Compressor & EEV Visuals Frame Specification Detail Node 4
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -67,7 +122,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 5
+### Compressor & EEV Visuals Frame Specification Detail Node 5
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -75,7 +130,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 6
+### Compressor & EEV Visuals Frame Specification Detail Node 6
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -83,7 +138,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 7
+### Compressor & EEV Visuals Frame Specification Detail Node 7
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -91,7 +146,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 8
+### Compressor & EEV Visuals Frame Specification Detail Node 8
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -99,7 +154,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 9
+### Compressor & EEV Visuals Frame Specification Detail Node 9
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -107,7 +162,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 10
+### Compressor & EEV Visuals Frame Specification Detail Node 10
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -115,7 +170,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 11
+### Compressor & EEV Visuals Frame Specification Detail Node 11
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -123,7 +178,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 12
+### Compressor & EEV Visuals Frame Specification Detail Node 12
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -131,7 +186,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 13
+### Compressor & EEV Visuals Frame Specification Detail Node 13
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -139,7 +194,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 14
+### Compressor & EEV Visuals Frame Specification Detail Node 14
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -147,7 +202,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 15
+### Compressor & EEV Visuals Frame Specification Detail Node 15
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -155,7 +210,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 16
+### Compressor & EEV Visuals Frame Specification Detail Node 16
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -163,7 +218,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 17
+### Compressor & EEV Visuals Frame Specification Detail Node 17
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -171,7 +226,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 18
+### Compressor & EEV Visuals Frame Specification Detail Node 18
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -179,7 +234,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 19
+### Compressor & EEV Visuals Frame Specification Detail Node 19
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -187,7 +242,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 20
+### Compressor & EEV Visuals Frame Specification Detail Node 20
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -195,7 +250,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 21
+### Compressor & EEV Visuals Frame Specification Detail Node 21
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -203,7 +258,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 22
+### Compressor & EEV Visuals Frame Specification Detail Node 22
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -211,7 +266,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 23
+### Compressor & EEV Visuals Frame Specification Detail Node 23
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -219,7 +274,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 24
+### Compressor & EEV Visuals Frame Specification Detail Node 24
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -227,7 +282,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 25
+### Compressor & EEV Visuals Frame Specification Detail Node 25
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -235,7 +290,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 26
+### Compressor & EEV Visuals Frame Specification Detail Node 26
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -243,7 +298,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 27
+### Compressor & EEV Visuals Frame Specification Detail Node 27
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -251,7 +306,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 28
+### Compressor & EEV Visuals Frame Specification Detail Node 28
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -259,7 +314,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 29
+### Compressor & EEV Visuals Frame Specification Detail Node 29
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -267,7 +322,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 30
+### Compressor & EEV Visuals Frame Specification Detail Node 30
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -275,7 +330,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 31
+### Compressor & EEV Visuals Frame Specification Detail Node 31
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -283,7 +338,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 32
+### Compressor & EEV Visuals Frame Specification Detail Node 32
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -291,7 +346,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 33
+### Compressor & EEV Visuals Frame Specification Detail Node 33
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -299,7 +354,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 34
+### Compressor & EEV Visuals Frame Specification Detail Node 34
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
@@ -307,7 +362,7 @@ and evaporator frost accumulations to matching coordinate mutations. The renderi
 to prevent screen flickering, using red/blue particle vectors to represent gas flows and amber glows to reflect thermal loads. 
 When the component enters a fault state, shaking keyframes offset the coordinate indices to provide direct visual warnings to the player.
 
-### Compressor & EEV Visuals Frame Rendering Spec Node 35
+### Compressor & EEV Visuals Frame Specification Detail Node 35
 This sub-specification outlines the frame-by-frame canvas coordinates, bounding box regions, pixel colors, and alpha masks 
 for the Scroll Compressor Core object inside the HTML5 game loop. We define the precise coordinate translations, camera scroll offsets, 
 and collision bounding boxes to ensure smooth 60fps animations. Specifically, we map the scroll rotation angles, EEV step movements, 
