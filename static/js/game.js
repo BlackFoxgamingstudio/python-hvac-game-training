@@ -268,83 +268,62 @@
       ctx.ellipse(cx + this.w / 2, this.y + this.h + 4, this.w / 2 - 2, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Body glow
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 18;
+      // Legs
+      ctx.fillStyle = '#2c3e50';
+      ctx.fillRect(cx + 8, cy + this.h - 10, 6, 12);
+      ctx.fillRect(cx + this.w - 14, cy + this.h - 10, 6, 12);
 
-      // Body
+      // Body (Rounded green capsule)
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.roundRect(cx, cy, this.w, this.h, 8);
+      ctx.roundRect(cx + 2, cy + 10, this.w - 4, this.h - 20, 6);
       ctx.fill();
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
 
-      // Body outline
-      ctx.strokeStyle = C.white;
+      // Head (Green square head)
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(cx + 4, cy - 8, this.w - 8, 20, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Antenna
+      ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(cx, cy, this.w, this.h, 8);
+      ctx.moveTo(cx + this.w / 2, cy - 8);
+      ctx.lineTo(cx + this.w / 2, cy - 18);
       ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx + this.w / 2, cy - 18, 3, 0, Math.PI * 2);
+      ctx.fill();
 
+      // Visor / Face
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(cx + 8, cy - 2, this.w - 16, 9, 2);
+      ctx.fill();
+
+      // Glowing Eyes
+      ctx.fillStyle = '#38b000';
+      ctx.shadowColor = '#38b000';
+      ctx.shadowBlur = 6;
+      ctx.fillRect(cx + 12, cy, 4, 4);
+      ctx.fillRect(cx + this.w - 16, cy, 4, 4);
       ctx.shadowBlur = 0;
 
-      // Visor (dark strip for eyes)
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.beginPath();
-      ctx.roundRect(cx + 4, cy + 10, this.w - 8, 16, 4);
-      ctx.fill();
-
-      // Eyes
-      const eyeY = cy + 18;
-      const blinking = this.eyeBlink > 175;
-      const eyeH = blinking ? 1 : 6;
-      const eyeW = 7;
-
-      // Left eye
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.roundRect(cx + 9, eyeY - eyeH / 2, eyeW, eyeH, 2);
-      ctx.fill();
-
-      // Right eye
-      ctx.beginPath();
-      ctx.roundRect(cx + this.w - 9 - eyeW, eyeY - eyeH / 2, eyeW, eyeH, 2);
-      ctx.fill();
-
-      if (!blinking) {
-        // Pupils
-        const pupilOff = this.direction === 'left' ? -1.5 : this.direction === 'right' ? 1.5 : 0;
-        const pupilOffY = this.direction === 'up' ? -1.5 : this.direction === 'down' ? 1.5 : 0;
-        ctx.fillStyle = '#111';
-        ctx.beginPath();
-        ctx.arc(cx + 12.5 + pupilOff, eyeY + pupilOffY, 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx + this.w - 12.5 + pupilOff, eyeY + pupilOffY, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Chest panel (HVAC indicator)
-      ctx.fillStyle = this.acActive ? 'rgba(34,211,238,0.35)' : 'rgba(255,255,255,0.08)';
-      ctx.beginPath();
-      ctx.roundRect(cx + 10, cy + 30, this.w - 20, 14, 3);
-      ctx.fill();
-      ctx.strokeStyle = this.acActive ? C.cyan : 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // AC snowflake icon
-      if (this.acActive) {
-        ctx.fillStyle = C.cyan;
-        ctx.font = '10px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('❄', cx + this.w / 2, cy + 41);
-      }
+      // Chest screen
+      ctx.fillStyle = this.acActive ? 'rgba(34,211,238,0.35)' : 'rgba(0,0,0,0.2)';
+      ctx.fillRect(cx + 10, cy + 16, this.w - 20, 10);
 
       // Name plate
       ctx.fillStyle = C.white;
-      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.font = 'bold 9px Inter, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(this.name, cx + this.w / 2, cy - 6);
+      ctx.fillText(this.name, cx + this.w / 2, cy - 24);
     }
 
     getTelemetry() {
@@ -413,37 +392,85 @@
       ctx.ellipse(cx + this.w / 2, this.y + this.h + 2, this.w / 2 - 2, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Faction coloring
-      ctx.fillStyle = this.faction === 'BAS Guild' ? '#8b5cf6' : this.faction === 'Refrigeration Scholars' ? '#3b82f6' : '#f97316';
-      ctx.beginPath();
-      ctx.roundRect(cx, cy, this.w, this.h, 6);
-      ctx.fill();
+      // Legs
+      ctx.fillStyle = '#2c3e50';
+      ctx.fillRect(cx + 6, cy + this.h - 8, 5, 10);
+      ctx.fillRect(cx + this.w - 11, cy + this.h - 8, 5, 10);
 
-      ctx.strokeStyle = C.white;
+      // Body (Purple rounded capsule)
+      ctx.fillStyle = '#8b5cf6';
+      ctx.beginPath();
+      ctx.roundRect(cx + 2, cy + 8, this.w - 4, this.h - 16, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1.5;
       ctx.stroke();
+
+      // Head
+      ctx.fillStyle = '#8b5cf6';
+      ctx.beginPath();
+      ctx.roundRect(cx + 4, cy - 6, this.w - 8, 16, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Antenna
+      ctx.strokeStyle = '#8b5cf6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + this.w / 2, cy - 6);
+      ctx.lineTo(cx + this.w / 2, cy - 14);
+      ctx.stroke();
+      ctx.fillStyle = '#8b5cf6';
+      ctx.beginPath();
+      ctx.arc(cx + this.w / 2, cy - 14, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Visor / Face
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(cx + 8, cy - 2, this.w - 16, 8, 2);
+      ctx.fill();
+
+      // Glowing Eyes
+      ctx.fillStyle = '#a78bfa';
+      ctx.shadowColor = '#a78bfa';
+      ctx.shadowBlur = 6;
+      ctx.fillRect(cx + 11, cy, 3, 3);
+      ctx.fillRect(cx + this.w - 14, cy, 3, 3);
+      ctx.shadowBlur = 0;
 
       // Name Label
       ctx.fillStyle = C.white;
       ctx.font = 'bold 9px Inter, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(this.name, cx + this.w / 2, cy - 4);
+      ctx.fillText(this.name, cx + this.w / 2, cy - 20);
 
-      // Dialogue bubble
+      // Dialogue box
       if (this.dialogueActive) {
-        ctx.fillStyle = 'rgba(10,12,22,0.92)';
+        ctx.fillStyle = 'rgba(10,12,22,0.95)';
         ctx.strokeStyle = C.cyan;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2.5;
+        
+        const bx = 90;
+        const by = 80;
+        const bw = 460;
+        const bh = 100;
+        
         ctx.beginPath();
-        ctx.roundRect(cx - 100, cy - 50, 232, 40, 6);
+        ctx.roundRect(bx, by, bw, bh, 8);
         ctx.fill();
         ctx.stroke();
 
+        ctx.strokeStyle = 'rgba(34,211,238,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(bx + 4, by + 4, bw - 8, bh - 8, 6);
+        ctx.stroke();
+
         ctx.fillStyle = C.white;
-        ctx.font = '7.5px Inter, sans-serif';
-        ctx.textAlign = 'center';
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'left';
         
-        // Wrap description to fit dialogue bubble width
         const descWords = this.description.split(' ');
         let line1 = '', line2 = '', line3 = '';
         descWords.forEach((word, idx) => {
@@ -452,9 +479,17 @@
           else line3 += word + ' ';
         });
 
-        ctx.fillText(line1.trim(), cx + this.w / 2, cy - 38);
-        if (line2) ctx.fillText(line2.trim(), cx + this.w / 2, cy - 28);
-        if (line3) ctx.fillText(line3.trim(), cx + this.w / 2, cy - 18);
+        ctx.fillText(line1.trim(), bx + 24, by + 32);
+        if (line2) ctx.fillText(line2.trim(), bx + 24, by + 56);
+        if (line3) ctx.fillText(line3.trim(), bx + 24, by + 80);
+
+        ctx.fillStyle = C.cyan;
+        ctx.beginPath();
+        ctx.moveTo(this.x + this.w / 2 - 10, by + bh);
+        ctx.lineTo(this.x + this.w / 2 + 10, by + bh);
+        ctx.lineTo(this.x + this.w / 2, by + bh + 14);
+        ctx.closePath();
+        ctx.fill();
       }
     }
   }
@@ -595,16 +630,55 @@
       ctx.lineWidth = (x % (spacing * 4) === 0) ? 0.8 : 0.4;
       ctx.beginPath();
       ctx.moveTo(x, 52);
-      ctx.lineTo(x, H - 40);
+      ctx.lineTo(x, H - 120);
       ctx.stroke();
     }
-    for (let y = 52; y <= H - 40; y += spacing) {
+    for (let y = 52; y <= H - 120; y += spacing) {
       ctx.strokeStyle = (y % (spacing * 4) < spacing) ? C.gridHi : C.grid;
       ctx.lineWidth = ((y - 52) % (spacing * 4) === 0) ? 0.8 : 0.4;
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(W, y);
       ctx.stroke();
+    }
+
+    // Draw metal walkway platform
+    const floorY = H - 120;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, floorY, W, 80);
+
+    // Platform upper rail
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, floorY);
+    ctx.lineTo(W, floorY);
+    ctx.stroke();
+
+    // Rivet plates at the bottom
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, floorY + 40, W, 40);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, floorY + 40);
+    ctx.lineTo(W, floorY + 40);
+    ctx.stroke();
+
+    // Vertical tile divisions and rivets
+    const plateWidth = 40;
+    for (let px = 0; px < W; px += plateWidth) {
+      ctx.beginPath();
+      ctx.moveTo(px, floorY + 40);
+      ctx.lineTo(px, H - 40);
+      ctx.stroke();
+
+      // Rivets
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.arc(px + 10, floorY + 48, 2, 0, Math.PI * 2);
+      ctx.arc(px + 30, floorY + 48, 2, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -617,7 +691,7 @@
     const W = canvas.width;
     const H = canvas.height;
 
-    let robot = new Robot(W / 2 - 22, H / 2 - 27, 'Atlas');
+    let robot = new Robot(W / 2 - 22, H - 120 - 54, 'Atlas');
     canvas.robotRef = robot;
     let particles = [];
     let keys = {};
@@ -625,7 +699,7 @@
     let frame = 0;
 
     let npcs = [
-      new NPC('NPC-001', 'Agent Clog-001', 103, 152, 'BAS Guild', 'NPC-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.')
+      new NPC('NPC-001', 'Agent Clog-001', 220, H - 120 - 44, 'BAS Guild', 'NPC-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.')
     ];
 
     // Key handlers
