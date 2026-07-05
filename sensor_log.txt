@@ -1,0 +1,9 @@
+HVAC Sensor Log
+===============
+Supply Air Temp: 55.2°F
+Return Air Temp: 72.8°F
+Status: Normal
+
+--- New Readings ---
+Supply Air Temp: 54.8°F
+Return Air Temp: 72.1°F

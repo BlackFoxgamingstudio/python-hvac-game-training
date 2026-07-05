@@ -271,7 +271,22 @@ for _mod_name in ['google', 'google.genai', 'google.genai.types']:
     sys.modules[_mod_name] = _create_deep_mock(_mod_name)
 sys.modules['google'].genai = sys.modules['google.genai']
 
-print("[Pyodide] Python engine loaded. Mocks for pygame & google.genai active.")
+# Also mock 'google.generativeai' (old SDK name used in some examples)
+sys.modules['google.generativeai'] = sys.modules['google.genai']
+
+# Mock os.getenv / os.environ for API keys
+import os as _os
+_orig_getenv = _os.getenv
+def _mock_getenv(key, default=None):
+    if 'API_KEY' in key or 'SECRET' in key:
+        return 'BROWSER_MOCK_KEY'
+    return _orig_getenv(key, default)
+_os.getenv = _mock_getenv
+
+# Mock csv module to work with StringIO (already works, but ensure import)
+import csv
+
+print("[Pyodide] Python engine loaded. Mocks for pygame, google.genai & file I/O active.")
       `);
 
       pyodideReady = true;
@@ -316,7 +331,94 @@ print("[Pyodide] Python engine loaded. Mocks for pygame & google.genai active.")
         // Remove exit() calls
         .replace(/\bexit\(\d*\)/g, 'pass')
         // Replace if __name__ == "__main__": main() with just main()
-        .replace(/if\s+__name__\s*==\s*["']__main__["']\s*:\s*\n\s*main\(\)/g, 'main()');
+        .replace(/if\s+__name__\s*==\s*["']__main__["']\s*:\s*\n\s*main\(\)/g, 'main()')
+        // Fix old google.generativeai import to google.genai
+        .replace(/import\s+google\.generativeai\s+as\s+genai/g, 'import google.genai as genai')
+        // Replace "while running:" / "while True:" game loops with limited iterations
+        .replace(/while\s+(running|True|game_running|self\.running)\s*:/g, 'for _browser_frame in range(5):  # Browser: limited to 5 frames')
+        // Replace "for event in pygame.event.get():" with empty list
+        .replace(/for\s+(\w+)\s+in\s+pygame\.event\.get\(\)\s*:/g, 'for $1 in []:  # Browser: no events');
+
+      // If code contains "open(" for file writes, inject a virtual filesystem
+      if (cleanCode.includes('open(') && (cleanCode.includes("'w'") || cleanCode.includes('"w"') || cleanCode.includes("'a'") || cleanCode.includes('"a"') || cleanCode.includes("'r'") || cleanCode.includes('"r"'))) {
+        cleanCode = `
+import io as _io
+
+class _VirtualFS:
+    """Virtual filesystem that persists data across open/close cycles."""
+    _files = {}
+    
+    @classmethod
+    def open(cls, path, mode='r', *a, **kw):
+        path = str(path)
+        if 'w' in mode:
+            buf = _VirtualFile(path, cls)
+            cls._files[path] = ""
+            print(f"[Browser] Writing to virtual file: {path}")
+            return buf
+        elif 'a' in mode:
+            buf = _VirtualFile(path, cls)
+            buf._buffer = cls._files.get(path, "")
+            print(f"[Browser] Appending to virtual file: {path}")
+            return buf
+        elif 'r' in mode:
+            content = cls._files.get(path, "timestamp,sensor,value\\n2024-01-01,temp,72.0\\n2024-01-01,pressure,410\\n")
+            return _io.StringIO(content)
+        return _io.StringIO()
+
+class _VirtualFile:
+    """A writable file object that saves to VirtualFS on close."""
+    def __init__(self, path, fs):
+        self._path = path
+        self._fs = fs
+        self._buffer = ""
+        self._closed = False
+    def write(self, data):
+        self._buffer += data
+    def writelines(self, lines):
+        for line in lines:
+            self._buffer += line
+    def close(self):
+        if not self._closed:
+            self._fs._files[self._path] = self._buffer
+            self._closed = True
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        self.close()
+    def flush(self): pass
+    def read(self):
+        return self._buffer
+    def readline(self):
+        return self._buffer.split("\\n")[0] + "\\n" if self._buffer else ""
+    def readlines(self):
+        return [l + "\\n" for l in self._buffer.split("\\n") if l]
+    def seek(self, pos):
+        pass
+    def tell(self):
+        return len(self._buffer)
+    def __iter__(self):
+        return iter(self._buffer.split("\\n"))
+    def __next__(self):
+        return next(iter(self))
+
+open = _VirtualFS.open
+` + cleanCode;
+      }
+
+      // If code tries to use os.getenv for API keys, provide a fallback
+      cleanCode = cleanCode.replace(
+        /os\.getenv\(\s*["']GEMINI_API_KEY["']\s*\)/g,
+        '"BROWSER_MOCK_KEY"'
+      );
+      cleanCode = cleanCode.replace(
+        /os\.environ\.get\(\s*["']GEMINI_API_KEY["']\s*\)/g,
+        '"BROWSER_MOCK_KEY"'
+      );
+      cleanCode = cleanCode.replace(
+        /os\.environ\[["']GEMINI_API_KEY["']\]/g,
+        '"BROWSER_MOCK_KEY"'
+      );
 
       // Store code in a Python variable (avoids JS string escaping issues)
       // We use a unique variable name to avoid collisions

@@ -63,10 +63,19 @@ class TrainingServerHandler(SimpleHTTPRequestHandler):
         # --- Route: Module Pages ---
         elif path.startswith("/module"):
             # Convert URL like /module/01 to pages/module_01_python_basics.html
+            # or /module/module_01_python_basics.html to the file directly
             filename = path.lstrip("/")
             if not filename.endswith(".html"):
+                # Try /module/01 → module_01_*.html pattern
+                parts = filename.split("/")
+                if len(parts) == 2 and parts[1].isdigit():
+                    module_num = parts[1].zfill(2)
+                    matches = list(PAGES_DIR.glob(f"module_{module_num}_*.html"))
+                    if matches:
+                        self._serve_file(matches[0], "text/html")
+                        return
                 filename += ".html"
-            filepath = PAGES_DIR / filename
+            filepath = PAGES_DIR / filename.replace("module/", "")
             if filepath.exists():
                 self._serve_file(filepath, "text/html")
             else:

@@ -324,6 +324,37 @@ print(refrigerant["temp"])      # 45.0</code></pre>
         cycle. The output of each function feeds into the next:
       </p>
       <pre><code class="language-python"># ═══ COMPLETE REFRIGERATION CYCLE SIMULATION ═══
+# (includes all 4 HVAC functions for standalone execution)
+
+def evaporator(refrigerant, room_temp):
+    """Evaporator: absorbs heat from room, refrigerant boils to gas."""
+    heat_absorbed = 15.0
+    new_ref = {"temp": refrigerant["temp"] + heat_absorbed,
+               "pressure": refrigerant["pressure"], "state": "gas"}
+    new_room = room_temp - 2.0
+    print(f"  ❄️ EVAPORATOR:  {refrigerant['temp']:.0f}°F liquid → {new_ref['temp']:.0f}°F gas | Room: {room_temp:.1f}→{new_room:.1f}°F")
+    return new_ref, new_room
+
+def compressor(refrigerant):
+    """Compressor: squeezes low-pressure gas to high-pressure gas."""
+    new_ref = {"temp": refrigerant["temp"] + 80.0,
+               "pressure": int(refrigerant["pressure"] * 6), "state": "gas"}
+    print(f"  🔧 COMPRESSOR:  {refrigerant['pressure']} PSI → {new_ref['pressure']} PSI | Temp spike to {new_ref['temp']:.0f}°F")
+    return new_ref
+
+def condenser(refrigerant, outdoor_temp):
+    """Condenser: rejects heat outdoors, gas condenses to liquid."""
+    new_ref = {"temp": outdoor_temp + 10.0,
+               "pressure": refrigerant["pressure"], "state": "liquid"}
+    print(f"  🌡️ CONDENSER:   {refrigerant['temp']:.0f}°F → {new_ref['temp']:.0f}°F | Heat rejected to {outdoor_temp}°F outdoor air")
+    return new_ref
+
+def expansion_valve(refrigerant):
+    """Expansion valve: drops pressure, refrigerant becomes cold liquid."""
+    new_ref = {"temp": 40.0,
+               "pressure": int(refrigerant["pressure"] / 6), "state": "liquid"}
+    print(f"  💧 EXPANSION:   {refrigerant['pressure']} PSI → {new_ref['pressure']} PSI | Temp drops to {new_ref['temp']:.0f}°F")
+    return new_ref
 
 def run_ac_cycle(num_cycles=5, room_temp=85.0, outdoor_temp=95.0):
     """

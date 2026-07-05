@@ -969,8 +969,93 @@ ol li {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* --- Selection --- */
 ::selection {
   background: rgba(0, 212, 255, 0.3);
   color: #fff;
 }
+
+/* --- Interactive Canvas Game Widget --- */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: var(--space-xl) auto;
+  width: 100%;
+  max-width: 900px;
+}
+
+.game-canvas-wrapper {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  background: var(--gradient-accent);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-cyan);
+  width: 100%;
+  aspect-ratio: 900 / 650;
+  overflow: hidden;
+  transition: transform var(--transition-normal);
+}
+
+.game-canvas-wrapper:focus-within {
+  transform: scale(1.01);
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(0, 212, 255, 0.4);
+}
+
+.game-canvas-wrapper canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--radius-lg) - 3px);
+  background: #0e1017;
+  cursor: pointer;
+  outline: none;
+}
+
+.game-instructions-overlay {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.game-instruction-col {
+  flex: 1;
+}
+
+.game-instruction-col:not(:last-child) {
+  margin-right: var(--space-lg);
+  border-right: 1px solid var(--border);
+  padding-right: var(--space-lg);
+}
+
+.game-instruction-col h4 {
+  color: var(--accent-cyan);
+  margin-bottom: var(--space-xs);
+  font-family: var(--font-family);
+  font-size: 1rem;
+}
+
+.game-instruction-col ul {
+  list-style: none;
+}
+
+.game-instruction-col ul li {
+  margin-bottom: 2px;
+}
+
+.game-instruction-col kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #fff;
+}
+

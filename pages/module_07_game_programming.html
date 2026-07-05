@@ -62,24 +62,32 @@
         <strong>control loop</strong> in a PLC or DDC controller — scan inputs, execute logic,
         update outputs. The same pattern drives HVAC controllers and video games.
       </p>
-      <pre><code class="language-python"># The Game Loop Pattern (pseudocode)
-while game_is_running:
-    # 1. PROCESS INPUT (scan)
-    check_keyboard()
-    check_mouse()
+      <pre><code class="language-python"># The Game Loop Pattern — runnable text-based demo
+# (In a real game, this runs 60 times per second with pygame)
 
-    # 2. UPDATE STATE (execute)
-    move_player()
-    run_physics()
-    check_collisions()
-    update_hvac_system()  # Our HVAC sim runs here!
+def check_keyboard():
+    print("    🎮 Checking keyboard input...")
 
-    # 3. RENDER (output)
-    clear_screen()
-    draw_background()
-    draw_player()
-    draw_hud()
-    display_frame()</code></pre>
+def move_player(frame):
+    print(f"    🚶 Moving player to position ({frame * 10}, 200)")
+
+def update_hvac_system(frame):
+    temp = 85.0 - (frame * 2.5)
+    print(f"    ❄️ HVAC update: Robot temp = {temp:.1f}°F")
+
+def render_frame(frame):
+    print(f"    🖥️ Drawing frame {frame} to screen")
+
+# Simulate 5 frames of a game loop
+print("🎮 GAME LOOP DEMO — 5 frames")
+print("=" * 45)
+for frame in range(1, 6):
+    print(f"\n--- Frame {frame} ---")
+    check_keyboard()         # 1. PROCESS INPUT
+    move_player(frame)       # 2. UPDATE STATE
+    update_hvac_system(frame)
+    render_frame(frame)      # 3. RENDER
+print("\n✅ Game loop complete!")</code></pre>
     </section>
 
     <!-- ── Pygame Setup ── -->
@@ -412,93 +420,111 @@ sys.exit()</code></pre>
         Here's the complete game loop that ties everything together — robot, input, HUD,
         and HVAC subsystem running as a game:
       </p>
-      <pre><code class="language-python">import pygame
-import sys
+      <pre><code class="language-python"># ═══ Complete Game Loop (Text-Based Browser Demo) ═══
+# This demonstrates the EXACT same architecture as the pygame version,
+# but outputs text so it works in the browser's Python runner.
+# To run with real graphics, save to a .py file and run with:  python robot_game.py
 
-def main():
-    """Main game function — the complete robot HVAC simulation."""
-    pygame.init()
+import pygame  # Mocked in browser — real in local Python
 
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 600
+class SimpleRobot:
+    """A simplified GameRobot for text-based demo."""
+    def __init__(self, x, y, name):
+        self.x, self.y, self.name = x, y, name
+        self.internal_temp = 72.0
+        self.ac_running = False
+        self.speed = 2
+    
+    def update(self, direction):
+        """Move and generate heat."""
+        if direction == "right": self.x += self.speed
+        elif direction == "up": self.y -= self.speed
+        self.internal_temp += 1.5  # Movement generates heat
+        if self.ac_running:
+            self.internal_temp -= 3.0  # AC cools
+        self.internal_temp = max(65.0, self.internal_temp)
 
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("🤖 Robot HVAC Simulation — Python Systems Thinking")
-    clock = pygame.time.Clock()
+    def get_telemetry(self):
+        status = "🟢 COOL" if self.internal_temp < 80 else "🔴 HOT"
+        return {
+            "name": self.name, "pos": (self.x, self.y),
+            "temp": self.internal_temp, "ac": self.ac_running,
+            "status": status
+        }
 
-    # Create game objects
-    robot = GameRobot(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, "Atlas")
-    hud = HUDOverlay()
+# ═══ GAME INITIALIZATION (same as pygame version) ═══
+print("🤖 ROBOT HVAC GAME — Text Simulation")
+print("=" * 50)
 
-    # Game state
-    running = True
-    show_help = True  # Show controls initially
+robot = SimpleRobot(400, 300, "Atlas")
+directions = ["right", "right", "up", "right", "up"]  # Simulated inputs
 
-    # Colors
-    BG_COLOR = (20, 22, 30)
-    GRID_COLOR = (35, 38, 50)
+# ═══ GAME LOOP (5 frames) ═══
+for frame in range(1, 6):
+    direction = directions[frame - 1]
+    
+    # Toggle AC on frame 3 (player presses SPACE)
+    if frame == 3:
+        robot.ac_running = True
+        print(f"\n  ⏎ Player pressed SPACE → AC ON")
+    
+    # 1. PROCESS INPUT
+    print(f"\n--- Frame {frame} | Input: {direction.upper()} ---")
+    
+    # 2. UPDATE STATE
+    robot.update(direction)
+    
+    # 3. RENDER (text-based)
+    t = robot.get_telemetry()
+    bar = "█" * int(t["temp"] / 5) + "░" * (20 - int(t["temp"] / 5))
+    print(f"  Position: ({t['pos'][0]}, {t['pos'][1]})")
+    print(f"  Temp:     {t['temp']:.1f}°F [{bar}] {t['status']}")
+    print(f"  AC:       {'ON ❄️' if t['ac'] else 'OFF'}")
 
-    while running:
-        # ═══ 1. PROCESS EVENTS ═══
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    running = False
-                if event.key == pygame.K_SPACE:
-                    robot.toggle_ac()
-                if event.key == pygame.K_h:
-                    show_help = not show_help
+print(f"\n{'=' * 50}")
+print(f"✅ Simulation complete! Final temp: {robot.internal_temp:.1f}°F")
+print(f"   Note: For real-time graphics, run locally with pygame!")</code></pre>
+    </section>
 
-        # ═══ 2. UPDATE ═══
-        keys = pygame.key.get_pressed()
-        robot.handle_input(keys)
-        robot.update()
-
-        # ═══ 3. RENDER ═══
-        # Background
-        screen.fill(BG_COLOR)
-
-        # Draw grid lines (like graph paper)
-        for x in range(0, SCREEN_WIDTH, 40):
-            pygame.draw.line(screen, GRID_COLOR, (x, 0), (x, SCREEN_HEIGHT))
-        for y in range(0, SCREEN_HEIGHT, 40):
-            pygame.draw.line(screen, GRID_COLOR, (0, y), (SCREEN_WIDTH, y))
-
-        # Draw robot
-        robot.draw(screen)
-
-        # Draw HUD
-        telemetry = robot.get_telemetry()
-        hud.draw(screen, telemetry)
-
-        # Help text (bottom of screen)
-        if show_help:
-            help_lines = [
-                "WASD/Arrows: Move | Shift+Move: Run | Space: Toggle AC | H: Hide Help | ESC: Quit"
-            ]
-            for i, line in enumerate(help_lines):
-                help_surf = pygame.font.Font(None, 20).render(line, True, (100, 100, 120))
-                screen.blit(help_surf, (10, SCREEN_HEIGHT - 25 + i * 18))
-
-        # Temperature warning bar
-        temp = robot.internal_temp
-        bar_width = int((temp / robot.max_temp) * (SCREEN_WIDTH - 20))
-        bar_color = GREEN if temp < 78 else (ORANGE if temp < 90 else RED)
-        pygame.draw.rect(screen, (40, 40, 50), (10, SCREEN_HEIGHT - 40, SCREEN_WIDTH - 20, 8))
-        pygame.draw.rect(screen, bar_color, (10, SCREEN_HEIGHT - 40, bar_width, 8))
-
-        # Flip display
-        pygame.display.flip()
-        clock.tick(60)
-
-    pygame.quit()
-    sys.exit()
-
-
-if __name__ == "__main__":
-    main()</code></pre>
+    <!-- ── Interactive Simulation ── -->
+    <section class="glass-card" id="interactive-game">
+      <h2>🎮 Playable Browser Simulation</h2>
+      <p>
+        To help you visualize how game loops, input handling, and HVAC subsystems update in real-time,
+        we've compiled the logic of the Python code blocks above into a high-performance interactive 
+        HTML5 Canvas game. Click the canvas to focus, then use your keyboard to control the robot!
+      </p>
+      
+      <div class="game-container">
+        <div class="game-canvas-wrapper">
+          <canvas id="module7-game-canvas" width="900" height="650"></canvas>
+        </div>
+        <div class="game-instructions-overlay">
+          <div class="game-instruction-col">
+            <h4>🕹️ Controls</h4>
+            <ul>
+              <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> : Move Robot</li>
+              <li><kbd>Shift</kbd> + Move : Run (Generates extra motor heat!)</li>
+              <li><kbd>Space</kbd> : Toggle internal HVAC Cooling System</li>
+            </ul>
+          </div>
+          <div class="game-instruction-col">
+            <h4>📊 Systems Behavior</h4>
+            <ul>
+              <li>Walking/running raises internal robot temperature.</li>
+              <li>Activating AC cools the robot back to nominal (72°F).</li>
+              <li>Overheating past 90°F enters Alarm state (changes body color).</li>
+            </ul>
+          </div>
+          <div class="game-instruction-col">
+            <h4>🛠️ Debug Options</h4>
+            <ul>
+              <li><kbd>T</kbd> : Show / Hide Telemetry HUD overlay</li>
+              <li><kbd>R</kbd> : Reset robot state and position</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ── Game-HVAC Connection ── -->
@@ -581,5 +607,11 @@ if __name__ == "__main__":
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
   <script src="../static/js/app.js"></script>
+  <script src="../static/js/game.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      RobotHVACGame.init('module7-game-canvas');
+    });
+  </script>
 </body>
 </html>

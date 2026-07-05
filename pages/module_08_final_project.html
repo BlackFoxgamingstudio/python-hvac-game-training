@@ -161,7 +161,7 @@
 # └── README.md                ← Project documentation</code></pre>
 
       <h3>requirements.txt</h3>
-      <pre><code class="language-python"># requirements.txt
+      <pre><code class="language-text"># requirements.txt
 # Install with: pip install -r requirements.txt
 
 pygame>=2.5.0
@@ -176,343 +176,215 @@ google-generativeai>=0.3.0</code></pre>
         complete simulation:
       </p>
       <pre><code class="language-python">"""
-Robot HVAC Simulation — Complete Final Project
+Robot HVAC Simulation — Complete Final Project (Browser-Compatible)
 Python Systems Thinking: From HVAC to Game Engine
 
-This is the culmination of all 8 modules:
-- Module 1: Python fundamentals (variables, logic, loops)
+This demo integrates ALL 8 modules in a text-based simulation:
+- Module 1: Variables, types, logic
 - Module 2: HVAC functions (evaporator, compressor, condenser, expansion valve)
-- Module 3: CSV telemetry logging
+- Module 3: CSV-style telemetry logging
 - Module 4: OOP (AirConditioner, Robot classes)
-- Module 5: AI integration (Gemini API)
-- Module 6: Diagnostic troubleshooting
-- Module 7: Pygame game engine
-- Module 8: Final integration (this file)
+- Module 5: AI diagnostic mock
+- Module 6: Fault detection
+- Module 7: Game loop architecture
+- Module 8: Full integration
 
-Controls:
-  WASD / Arrow Keys  — Move the robot
-  Shift + Move       — Run (generates more heat)
-  Space              — Toggle AC cooling system
-  T                  — Show/hide telemetry HUD
-  D                  — Run diagnostic scan
-  H                  — Show/hide help
-  ESC                — Quit
+For the pygame graphics version, clone the repo and run locally:
+  python main.py
 """
-
-import pygame
-import sys
 import csv
 from datetime import datetime
+from io import StringIO
 
 # ═══════════════════════════════════════════════
-#  CONSTANTS
+#  MODULE 1 &amp; 2: CONSTANTS &amp; HVAC FUNCTIONS
 # ═══════════════════════════════════════════════
-SCREEN_WIDTH = 900
-SCREEN_HEIGHT = 650
-FPS = 60
+SETPOINT = 72.0
+MAX_TEMP = 100.0
+OVERHEAT_THRESHOLD = 90.0
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BG_COLOR = (18, 20, 28)
-GRID_COLOR = (30, 33, 45)
-GREEN = (60, 200, 100)
-ORANGE = (255, 165, 0)
-RED = (240, 60, 60)
-CYAN = (0, 200, 220)
-BLUE = (50, 130, 240)
-YELLOW = (255, 220, 50)
+def evaporator(ref, room_temp):
+    """Absorb heat from room — refrigerant boils to gas."""
+    new_ref = {"temp": ref["temp"] + 15, "pressure": ref["pressure"], "state": "gas"}
+    return new_ref, room_temp - 2.0
+
+def compressor(ref):
+    """Compress gas — pressure and temp spike."""
+    return {"temp": ref["temp"] + 80, "pressure": ref["pressure"] * 6, "state": "gas"}
+
+def condenser(ref, outdoor_temp=95.0):
+    """Reject heat outdoors — gas condenses to liquid."""
+    return {"temp": outdoor_temp + 10, "pressure": ref["pressure"], "state": "liquid"}
+
+def expansion_valve(ref):
+    """Drop pressure — cold liquid ready for evaporator."""
+    return {"temp": 40.0, "pressure": ref["pressure"] // 6, "state": "liquid"}
 
 # ═══════════════════════════════════════════════
-#  AIR CONDITIONER CLASS (Modules 2 & 4)
+#  MODULE 4: OOP CLASSES
 # ═══════════════════════════════════════════════
 class AirConditioner:
-    """Complete AC system with refrigerant cycle simulation."""
-
-    def __init__(self, unit_id):
+    def __init__(self, unit_id, capacity=1.0):
         self.unit_id = unit_id
         self.cycle_count = 0
-        self.is_running = False
         self.refrigerant = {"temp": 40.0, "pressure": 68, "state": "liquid"}
-        self.cooling_power = 0.4  # Degrees per frame when running
 
-    def run_cycle(self, current_temp):
-        """Run one cooling step. Returns new temperature."""
-        self.is_running = True
+    def run_cycle(self, room_temp, outdoor_temp=95.0):
         self.cycle_count += 1
+        self.refrigerant, room_temp = evaporator(self.refrigerant, room_temp)
+        self.refrigerant = compressor(self.refrigerant)
+        self.refrigerant = condenser(self.refrigerant, outdoor_temp)
+        self.refrigerant = expansion_valve(self.refrigerant)
+        return room_temp
 
-        # Simplified cycle for game performance
-        # (Full cycle from Module 2 runs in the background)
-        new_temp = current_temp - self.cooling_power
-        return max(65.0, new_temp)  # Don't overcool
-
-    def stop(self):
-        self.is_running = False
-
-    def get_telemetry(self):
-        return {
-            "unit_id": self.unit_id,
-            "running": self.is_running,
-            "cycles": self.cycle_count,
-            "ref_temp": self.refrigerant["temp"],
-            "ref_pressure": self.refrigerant["pressure"],
-            "ref_state": self.refrigerant["state"]
-        }
-
-
-# ═══════════════════════════════════════════════
-#  TELEMETRY LOGGER (Module 3)
-# ═══════════════════════════════════════════════
-class TelemetryLogger:
-    """Logs robot and AC telemetry to CSV."""
-
-    def __init__(self, filename="data/game_telemetry.csv"):
-        self.filename = filename
-        self.headers = [
-            "timestamp", "frame", "robot_x", "robot_y",
-            "internal_temp", "ac_running", "ac_cycles", "steps"
-        ]
-        self.frame_count = 0
-        self.log_interval = 60  # Log every 60 frames (once per second)
-
-        # Create file with headers
-        try:
-            with open(self.filename, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(self.headers)
-        except FileNotFoundError:
-            import os
-            os.makedirs("data", exist_ok=True)
-            with open(self.filename, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(self.headers)
-
-    def log(self, telemetry):
-        """Log telemetry at regular intervals."""
-        self.frame_count += 1
-        if self.frame_count % self.log_interval != 0:
-            return
-
-        with open(self.filename, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                datetime.now().isoformat(),
-                self.frame_count,
-                telemetry["x"], telemetry["y"],
-                f"{telemetry['temp']:.1f}",
-                telemetry["ac_running"],
-                telemetry["ac_cycles"],
-                telemetry["steps"]
-            ])
-
-
-# ═══════════════════════════════════════════════
-#  GAME ROBOT (Modules 4 & 7)
-# ═══════════════════════════════════════════════
-class GameRobot:
-    """Visual robot with HVAC integration for Pygame."""
-
-    def __init__(self, x, y, name="Atlas"):
+class Robot:
+    def __init__(self, name, x=0, y=0):
         self.name = name
-        self.x = float(x)
-        self.y = float(y)
-        self.width = 40
-        self.height = 50
-        self.speed = 3.0
+        self.x, self.y = x, y
         self.internal_temp = 72.0
-        self.max_temp = 100.0
-        self.steps = 0
-        self.direction = "right"
-        self.color = GREEN
-
-        # Composition: Robot HAS-AN AirConditioner
         self.ac = AirConditioner(f"{name}-AC")
-        self.ac_active = False
+        self.steps = 0
+        self.telemetry_log = []
 
-    def handle_input(self, keys):
-        is_running = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
-        speed = self.speed * (2.0 if is_running else 1.0)
-        heat = 0.2 if is_running else 0.08
-        moved = False
+    def move(self, direction, running=False):
+        speed = 3 if running else 1
+        heat = 2.5 if running else 1.0
+        if direction == "right": self.x += speed
+        elif direction == "left": self.x -= speed
+        elif direction == "up": self.y -= speed
+        elif direction == "down": self.y += speed
+        self.steps += 1
+        self.internal_temp += heat
 
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.x -= speed; self.direction = "left"; moved = True
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.x += speed; self.direction = "right"; moved = True
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.y -= speed; self.direction = "up"; moved = True
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            self.y += speed; self.direction = "down"; moved = True
-
-        if moved:
-            self.steps += 1
-            self.internal_temp += heat
-
-        self.x = max(0, min(SCREEN_WIDTH - self.width, self.x))
-        self.y = max(60, min(SCREEN_HEIGHT - self.height - 40, self.y))
-
-    def update(self):
-        # Passive cooling
-        if self.internal_temp > 68.0:
-            self.internal_temp -= 0.015
-
-        # AC cooling
-        if self.ac_active:
+    def cool(self):
+        if self.internal_temp > 75.0:
             self.internal_temp = self.ac.run_cycle(self.internal_temp)
-            if self.internal_temp <= 70.0:
-                self.ac_active = False
-                self.ac.stop()
 
-        # Color coding
-        if self.internal_temp >= 90:
-            self.color = RED
-        elif self.internal_temp >= 78:
-            self.color = ORANGE
-        else:
-            self.color = GREEN
+    def log_telemetry(self, frame):
+        """Module 3: Log data like a CSV trend log."""
+        self.telemetry_log.append({
+            "frame": frame,
+            "x": self.x, "y": self.y,
+            "temp": round(self.internal_temp, 1),
+            "ac_cycles": self.ac.cycle_count,
+            "status": "COOL" if self.internal_temp < 80 else "WARM" if self.internal_temp < 90 else "HOT"
+        })
 
-        self.internal_temp = max(40.0, min(self.max_temp, self.internal_temp))
-
-    def toggle_ac(self):
-        self.ac_active = not self.ac_active
-        if not self.ac_active:
-            self.ac.stop()
-
-    def draw(self, surface, font):
-        # Body
-        rect = pygame.Rect(int(self.x), int(self.y), self.width, self.height)
-        pygame.draw.rect(surface, self.color, rect, border_radius=6)
-        pygame.draw.rect(surface, WHITE, rect, 2, border_radius=6)
-
-        # Eyes
-        eye_y = int(self.y) + 12
-        pygame.draw.circle(surface, WHITE, (int(self.x) + 14, eye_y), 5)
-        pygame.draw.circle(surface, WHITE, (int(self.x) + 28, eye_y), 5)
-        pygame.draw.circle(surface, BLACK, (int(self.x) + 14, eye_y), 2)
-        pygame.draw.circle(surface, BLACK, (int(self.x) + 28, eye_y), 2)
-
-        # Name
-        name_surf = font.render(self.name, True, WHITE)
-        surface.blit(name_surf, (int(self.x) + self.width//2 - name_surf.get_width()//2, int(self.y) - 18))
-
-        # AC indicator
-        if self.ac_active:
-            ac_text = font.render("❄ AC ON", True, CYAN)
-            surface.blit(ac_text, (int(self.x) - 10, int(self.y) + self.height + 4))
-
-    def get_telemetry(self):
-        return {
-            "name": self.name, "x": int(self.x), "y": int(self.y),
-            "temp": self.internal_temp, "ac_running": self.ac_active,
-            "ac_cycles": self.ac.cycle_count, "steps": self.steps,
-            "direction": self.direction
-        }
-
+    def diagnose(self):
+        """Module 6: Run diagnostic checks."""
+        faults = []
+        if self.internal_temp > OVERHEAT_THRESHOLD:
+            faults.append(f"⚠️ OVERHEAT: {self.internal_temp:.1f}°F exceeds {OVERHEAT_THRESHOLD}°F")
+        if self.ac.cycle_count > 10:
+            faults.append(f"⚠️ HIGH CYCLE COUNT: {self.ac.cycle_count} cycles (check compressor wear)")
+        if not faults:
+            faults.append("✅ All systems nominal")
+        return faults
 
 # ═══════════════════════════════════════════════
-#  HUD OVERLAY (Module 7)
+#  MODULE 7 &amp; 8: GAME LOOP SIMULATION
 # ═══════════════════════════════════════════════
-class HUD:
-    def __init__(self):
-        self.font = pygame.font.Font(None, 22)
-        self.title_font = pygame.font.Font(None, 26)
+print("╔══════════════════════════════════════════════════╗")
+print("║  🤖 ROBOT HVAC GAME — Complete Final Project    ║")
+print("║     Python Systems Thinking Course              ║")
+print("╚══════════════════════════════════════════════════╝")
+print()
 
-    def draw(self, surface, telemetry):
-        w, h = 210, 220
-        panel = pygame.Surface((w, h), pygame.SRCALPHA)
-        panel.fill((0, 0, 0, 170))
-        pygame.draw.rect(panel, CYAN, (0, 0, w, h), 1)
+# Initialize game objects
+robot = Robot("Atlas", x=400, y=300)
+# Simulated player inputs (keyboard presses)
+game_script = [
+    ("right", False), ("right", False), ("up", False),
+    ("right", True),   # Running!
+    ("right", True),   # Running more!
+    ("up", False), ("up", False),
+    ("left", False), ("down", True), ("right", False)
+]
 
-        y = 8
-        title = self.title_font.render("TELEMETRY", True, CYAN)
-        panel.blit(title, (8, y)); y += 28
+# Game loop — 10 frames
+for frame in range(1, len(game_script) + 1):
+    direction, is_running = game_script[frame - 1]
+    mode = "🏃 RUN" if is_running else "🚶 WALK"
 
-        temp = telemetry["temp"]
-        tc = GREEN if temp < 78 else (ORANGE if temp < 90 else RED)
+    # 1. PROCESS INPUT
+    # (In real game: pygame.event.get() + pygame.key.get_pressed())
 
-        lines = [
-            (f"Temp: {temp:.1f}°F", tc),
-            (f"Pos: ({telemetry['x']}, {telemetry['y']})", WHITE),
-            (f"Steps: {telemetry['steps']}", WHITE),
-            (f"Dir: {telemetry['direction']}", WHITE),
-            (f"AC: {'ON' if telemetry['ac_running'] else 'OFF'}", CYAN if telemetry['ac_running'] else WHITE),
-            (f"AC Cycles: {telemetry['ac_cycles']}", WHITE),
-        ]
-        for text, color in lines:
-            s = self.font.render(text, True, color)
-            panel.blit(s, (8, y)); y += 24
+    # 2. UPDATE STATE
+    robot.move(direction, running=is_running)
+    robot.cool()  # AC auto-engages when hot
+    robot.log_telemetry(frame)
 
-        surface.blit(panel, (SCREEN_WIDTH - w - 10, 10))
+    # 3. RENDER (text HUD)
+    entry = robot.telemetry_log[-1]
+    temp_bar = "█" * int(entry["temp"] / 5) + "░" * (20 - int(entry["temp"] / 5))
+    status_icon = "🟢" if entry["status"] == "COOL" else "🟡" if entry["status"] == "WARM" else "🔴"
 
+    print(f"Frame {frame:2d} | {mode} {direction.upper():5s} | "
+          f"({entry['x']:3d},{entry['y']:3d}) | "
+          f"{entry['temp']:5.1f}°F [{temp_bar}] {status_icon} | "
+          f"AC×{entry['ac_cycles']}")
 
-# ═══════════════════════════════════════════════
-#  MAIN GAME LOOP (Module 8 — Everything Together)
-# ═══════════════════════════════════════════════
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Robot HVAC Simulation — Final Project")
-    clock = pygame.time.Clock()
-    font = pygame.font.Font(None, 20)
+# ═══ MODULE 6: POST-GAME DIAGNOSTICS ═══
+print(f"\n{'═' * 50}")
+print("📋 POST-GAME DIAGNOSTIC REPORT")
+print(f"{'═' * 50}")
+for fault in robot.diagnose():
+    print(f"  {fault}")
 
-    robot = GameRobot(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-    hud = HUD()
-    logger = TelemetryLogger()
-    show_hud = True
-    show_help = True
+# ═══ MODULE 3: TELEMETRY EXPORT ═══
+print(f"\n📊 TELEMETRY LOG ({len(robot.telemetry_log)} entries):")
+print(f"  {'Frame':>5} | {'X':>3},{'Y':>3} | {'Temp':>6} | {'Status':>4} | AC")
+print(f"  {'-'*5}-+-{'-'*7}-+-{'-'*6}-+-{'-'*4}-+---")
+for row in robot.telemetry_log:
+    print(f"  {row['frame']:5d} | {row['x']:3d},{row['y']:3d} | {row['temp']:5.1f}°F | {row['status']:4s} | {row['ac_cycles']}")
 
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE: running = False
-                if event.key == pygame.K_SPACE: robot.toggle_ac()
-                if event.key == pygame.K_t: show_hud = not show_hud
-                if event.key == pygame.K_h: show_help = not show_help
-
-        robot.handle_input(pygame.key.get_pressed())
-        robot.update()
-
-        telemetry = robot.get_telemetry()
-        logger.log(telemetry)
-
-        # Render
-        screen.fill(BG_COLOR)
-        for x in range(0, SCREEN_WIDTH, 40):
-            pygame.draw.line(screen, GRID_COLOR, (x, 0), (x, SCREEN_HEIGHT))
-        for y in range(0, SCREEN_HEIGHT, 40):
-            pygame.draw.line(screen, GRID_COLOR, (0, y), (SCREEN_WIDTH, y))
-
-        robot.draw(screen, font)
-        if show_hud:
-            hud.draw(screen, telemetry)
-
-        # Temp bar
-        bar_w = int((robot.internal_temp / robot.max_temp) * (SCREEN_WIDTH - 20))
-        bar_c = GREEN if robot.internal_temp < 78 else (ORANGE if robot.internal_temp < 90 else RED)
-        pygame.draw.rect(screen, (30, 30, 40), (10, SCREEN_HEIGHT - 30, SCREEN_WIDTH - 20, 10))
-        pygame.draw.rect(screen, bar_c, (10, SCREEN_HEIGHT - 30, bar_w, 10), border_radius=3)
-
-        if show_help:
-            help_text = "WASD: Move | Shift: Run | Space: AC | T: Telemetry | H: Help | ESC: Quit"
-            screen.blit(font.render(help_text, True, (80, 80, 100)), (10, SCREEN_HEIGHT - 48))
-
-        pygame.display.flip()
-        clock.tick(FPS)
-
-    pygame.quit()
-    print(f"\n📊 Telemetry saved to data/game_telemetry.csv")
-    print(f"   Total AC cycles: {robot.ac.cycle_count}")
-    print(f"   Total steps: {robot.steps}")
-    sys.exit()
-
-
-if __name__ == "__main__":
-    main()</code></pre>
+print(f"\n{'═' * 50}")
+print(f"🏁 GAME OVER — Total steps: {robot.steps} | AC cycles: {robot.ac.cycle_count}")
+print(f"   Final temp: {robot.internal_temp:.1f}°F")
+print(f"   For pygame graphics: clone repo → python main.py")
+print(f"{'═' * 50}")</code></pre>
     </section>
 
+    <!-- ── Interactive Final Project Game ── -->
+    <section class="glass-card" id="interactive-game">
+      <h2>🎮 Final Project Interactive Sandbox</h2>
+      <p>
+        Experience the fully integrated systems model in your browser! This simulation implements the classes,
+        telemetry logging intervals, and AC cycle control loops from the final project Python design. 
+        Click to focus and take the robot for a spin.
+      </p>
+      
+      <div class="game-container">
+        <div class="game-canvas-wrapper">
+          <canvas id="module8-game-canvas" width="900" height="650"></canvas>
+        </div>
+        <div class="game-instructions-overlay">
+          <div class="game-instruction-col">
+            <h4>🕹️ Keyboard Controls</h4>
+            <ul>
+              <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / Arrow Keys : Walk</li>
+              <li><kbd>Shift</kbd> + Move : Run (Generates extra friction heat!)</li>
+              <li><kbd>Space</kbd> : Toggle HVAC Compressor System</li>
+            </ul>
+          </div>
+          <div class="game-instruction-col">
+            <h4>⚙️ HVAC Systems Integration</h4>
+            <ul>
+              <li>Walking / running creates a load on the cooling unit.</li>
+              <li>AC system works in cycles to cool down the robot.</li>
+              <li>Live HUD updates telemetry state exactly like our Python logger!</li>
+            </ul>
+          </div>
+          <div class="game-instruction-col">
+            <h4>🛠️ Simulation Controls</h4>
+            <ul>
+              <li><kbd>T</kbd> : Toggle Telemetry panel HUD overlay</li>
+              <li><kbd>R</kbd> : Defrost / Reset the robot state</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
     <!-- ── Running Instructions ── -->
     <section class="glass-card" id="running">
       <h2>▶️ 8.4 — How to Run the Final Project</h2>
@@ -669,5 +541,11 @@ if __name__ == "__main__":
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
   <script src="../static/js/app.js"></script>
+  <script src="../static/js/game.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      RobotHVACGame.init('module8-game-canvas');
+    });
+  </script>
 </body>
 </html>

@@ -338,6 +338,19 @@ run_simulation_with_logging()</code></pre>
       </p>
       <pre><code class="language-python">import csv
 
+# First, create sample trend data (normally written by previous block)
+sample_data = [
+    {"timestamp": "10:00:00", "cycle": 1, "component": "evaporator", "room_temp": "85.0", "ref_temp": "55.0"},
+    {"timestamp": "10:01:00", "cycle": 2, "component": "compressor", "room_temp": "83.0", "ref_temp": "135.0"},
+    {"timestamp": "10:02:00", "cycle": 3, "component": "condenser", "room_temp": "81.0", "ref_temp": "105.0"},
+    {"timestamp": "10:03:00", "cycle": 4, "component": "evaporator", "room_temp": "79.0", "ref_temp": "55.0"},
+    {"timestamp": "10:04:00", "cycle": 5, "component": "compressor", "room_temp": "77.0", "ref_temp": "135.0"},
+]
+with open("hvac_telemetry.csv", "w") as f:
+    writer = csv.DictWriter(f, fieldnames=sample_data[0].keys())
+    writer.writeheader()
+    writer.writerows(sample_data)
+
 # ═══ Reading the Trend Log ═══
 def analyze_trend_log(filename="hvac_telemetry.csv"):
     """Read CSV trend data and produce a summary report."""
@@ -383,18 +396,30 @@ analyze_trend_log()</code></pre>
         <strong>list comprehension</strong>. It's a compact way to build a list by transforming
         each item. Think of it as "for every row in my data, grab the room_temp and convert it to a number":
       </p>
-      <pre><code class="language-python"># Long way (standard loop)
+      <pre><code class="language-python"># Sample data (normally loaded from CSV — see blocks above)
+rows = [
+    {"room_temp": "82.0", "timestamp": "10:00"},
+    {"room_temp": "80.5", "timestamp": "10:05"},
+    {"room_temp": "79.0", "timestamp": "10:10"},
+    {"room_temp": "77.2", "timestamp": "10:15"},
+    {"room_temp": "75.8", "timestamp": "10:20"},
+]
+
+# Long way (standard loop)
 room_temps = []
 for row in rows:
     temp = float(row["room_temp"])
     room_temps.append(temp)
+print(f"Temps (loop):          {room_temps}")
 
 # Short way (list comprehension) — same result!
 room_temps = [float(row["room_temp"]) for row in rows]
+print(f"Temps (comprehension): {room_temps}")
 
 # You can even filter! Only get temps above 80°F:
 high_temps = [float(row["room_temp"]) for row in rows
-              if float(row["room_temp"]) > 80.0]</code></pre>
+              if float(row["room_temp"]) > 80.0]
+print(f"High temps (&gt;80°F):    {high_temps}")</code></pre>
     </section>
 
     <!-- ── Key Takeaways ── -->

@@ -121,6 +121,11 @@ refrigerant_type = "R-410A"  # String: the refrigerant type</code></pre>
         transducer? A status relay?
       </p>
       <pre><code class="language-python"># Check the type of each variable
+supply_air_temp = 55.0
+discharge_pressure = 410
+unit_name = "RTU-01"
+system_running = True
+
 print(type(supply_air_temp))    # &lt;class 'float'&gt;
 print(type(discharge_pressure)) # &lt;class 'int'&gt;
 print(type(unit_name))          # &lt;class 'str'&gt;

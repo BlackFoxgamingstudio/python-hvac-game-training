@@ -236,7 +236,22 @@ print(f"\n{ac}")  # [RTU-01] 5.0T | Status: RUNNING | Cycles: 5</code></pre>
         Our robot is a separate entity that moves, has a position, and contains an air
         conditioning system. Let's build the Robot class:
       </p>
-      <pre><code class="language-python">class Robot:
+      <pre><code class="language-python"># Minimal AirConditioner (from previous block — included for standalone execution)
+class AirConditioner:
+    def __init__(self, unit_id, capacity_tons=5.0):
+        self.unit_id = unit_id
+        self.capacity_tons = capacity_tons
+        self.is_running = False
+        self.cycle_count = 0
+        self.refrigerant = {"temp": 40.0, "pressure": 68, "state": "liquid"}
+    def run_cycle(self, room_temp, outdoor_temp=95.0):
+        self.is_running = True
+        self.cycle_count += 1
+        cooled_temp = room_temp - 2.0
+        self.is_running = False
+        return cooled_temp
+
+class Robot:
     """
     A robot with movement capabilities and an internal AC system.
 
@@ -369,16 +384,29 @@ bot.status()</code></pre>
         like how a real robot would have a cooling module installed inside it — a separate component
         that can be swapped, upgraded, or maintained independently.
       </p>
-      <pre><code class="language-python"># Composition in one line:
-self.ac = AirConditioner(f"{name}-AC", capacity_tons=1.0)
+      <pre><code class="language-python"># Demonstrating COMPOSITION — one object contains another
+class AirConditioner:
+    def __init__(self, unit_id, capacity_tons=1.0):
+        self.unit_id = unit_id
+        self.capacity_tons = capacity_tons
+    def run_cycle(self, room_temp, outdoor_temp=95.0):
+        return room_temp - 2.0  # Simplified cooling
+
+# Composition in one line inside __init__:
+name = "Atlas"
+ac = AirConditioner(f"{name}-AC", capacity_tons=1.0)
+print(f"Created: {ac.unit_id} ({ac.capacity_tons} ton)")
 
 # The Robot doesn't know HOW the AC works internally.
-# It just calls self.ac.run_cycle() and gets a result.
+# It just calls ac.run_cycle() and gets a result.
 # This is called ENCAPSULATION — hiding complexity behind a simple interface.
+temp = 85.0
+temp = ac.run_cycle(temp)
+print(f"Cooled from 85.0°F to {temp}°F")
 
 # You could swap in a different cooling system:
-# self.cooler = LiquidCoolingSystem(...)
-# self.cooler = ThermoelectricCooler(...)
+# ac = LiquidCoolingSystem(...)
+# ac = ThermoelectricCooler(...)
 # The Robot code barely changes — just the method call.</code></pre>
     </section>
 
