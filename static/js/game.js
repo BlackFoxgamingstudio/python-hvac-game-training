@@ -369,6 +369,96 @@
     }
   }
 
+  // ─── NPC CLASS ───────────────────────────────────────────
+  class NPC {
+    constructor(id, name, x, y, faction, description) {
+      this.id = id;
+      this.name = name;
+      this.x = x;
+      this.y = y;
+      this.w = 32;
+      this.h = 44;
+      this.faction = faction;
+      this.description = description;
+      this.bobPhase = Math.random() * Math.PI;
+      this.dialogueActive = false;
+      this.calibrated = false;
+    }
+    update(player, particles) {
+      this.bobPhase += 0.04;
+      const dx = (this.x + this.w / 2) - (player.x + player.w / 2);
+      const dy = (this.y + this.h / 2) - (player.y + player.h / 2);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 55) {
+        this.dialogueActive = true;
+        if (!this.calibrated && Math.random() < 0.15) {
+          // Emit sparks particles
+          for (let k = 0; k < 3; k++) {
+            particles.push(new Particle(this.x + this.w / 2, this.y + this.h / 2, 'cool'));
+          }
+        }
+      } else {
+        this.dialogueActive = false;
+      }
+    }
+    draw(ctx) {
+      const bob = Math.sin(this.bobPhase) * 1.5;
+      const cx = this.x;
+      const cy = this.y + bob;
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(cx + this.w / 2, this.y + this.h + 2, this.w / 2 - 2, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Faction coloring
+      ctx.fillStyle = this.faction === 'BAS Guild' ? '#8b5cf6' : this.faction === 'Refrigeration Scholars' ? '#3b82f6' : '#f97316';
+      ctx.beginPath();
+      ctx.roundRect(cx, cy, this.w, this.h, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = C.white;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Name Label
+      ctx.fillStyle = C.white;
+      ctx.font = 'bold 9px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.name, cx + this.w / 2, cy - 4);
+
+      // Dialogue bubble
+      if (this.dialogueActive) {
+        ctx.fillStyle = 'rgba(10,12,22,0.92)';
+        ctx.strokeStyle = C.cyan;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(cx - 100, cy - 50, 232, 40, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = C.white;
+        ctx.font = '7.5px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        
+        // Wrap description to fit dialogue bubble width
+        const descWords = this.description.split(' ');
+        let line1 = '', line2 = '', line3 = '';
+        descWords.forEach((word, idx) => {
+          if (idx < 6) line1 += word + ' ';
+          else if (idx < 13) line2 += word + ' ';
+          else line3 += word + ' ';
+        });
+
+        ctx.fillText(line1.trim(), cx + this.w / 2, cy - 38);
+        if (line2) ctx.fillText(line2.trim(), cx + this.w / 2, cy - 28);
+        if (line3) ctx.fillText(line3.trim(), cx + this.w / 2, cy - 18);
+      }
+    }
+  }
+
   // ─── HUD ─────────────────────────────────────────────────
   function drawHUD(ctx, telemetry, W, H, showTelemetry) {
     // Top bar
@@ -534,6 +624,10 @@
     let showTelemetry = true;
     let frame = 0;
 
+    let npcs = [
+      new NPC('NPC-001', 'Agent Clog-001', 103, 152, 'BAS Guild', 'NPC-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.')
+    ];
+
     // Key handlers
     const handleKeyDown = (e) => {
       keys[e.code] = true;
@@ -569,6 +663,7 @@
 
       // Update
       robot.update(keys, { w: W, h: H }, particles);
+      npcs.forEach(n => n.update(robot, particles));
 
       // Update particles
       particles = particles.filter(p => p.life > 0);
@@ -588,6 +683,9 @@
 
       // Particles behind robot
       particles.forEach(p => p.draw(ctx));
+
+      // NPCs
+      npcs.forEach(n => n.draw(ctx));
 
       // Robot
       robot.draw(ctx);
