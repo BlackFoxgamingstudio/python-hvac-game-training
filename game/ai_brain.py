@@ -64,6 +64,11 @@ class RobotBrain:
         # --- Chat History ---
         self.chat_history = []  # List of {"role": "user"/"ai", "text": "..."}
         
+        # --- Prompt Vectors Tracker ---
+        self.prompt_vectors = {
+            "AI-001": AIPromptVector("AI-001", "AI-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.")
+        }
+        
         # --- Initialize the API client ---
         self._init_client()
 
@@ -229,3 +234,18 @@ class RobotBrain:
         """Clear chat history and cache."""
         self.chat_history.clear()
         self.response_cache.clear()
+
+
+class AIPromptVector:
+    """
+    Represents a structured prompt vector component for compiling 
+    contextual input payloads for the Gemini API.
+    """
+    def __init__(self, vector_id: str, description: str):
+        self.vector_id = vector_id
+        self.description = description
+        self.calibrated = False
+
+    def compile_payload(self, telemetry: dict) -> str:
+        """Compiles prompt payload with physical variables context."""
+        return f"AI Prompt Vector {self.vector_id} context: {self.description}\nSystem telemetry: {telemetry}"
