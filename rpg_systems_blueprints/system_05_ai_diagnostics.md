@@ -64,6 +64,14 @@ flowchart TB
 
 ---
 
+## 🖼️ Visual Calibration Snapshot (AI-001)
+
+Below is the verified diagnostic interface calibration showing prompt vector verification:
+
+![AI-001 Prompt Vector Calibration](../static/images/snapshots/ai_001_screenshot.jpg)
+
+---
+
 ## 📝 Diagnostic Persona Instructions
 
 ### 1. Tone and Structural Constraints

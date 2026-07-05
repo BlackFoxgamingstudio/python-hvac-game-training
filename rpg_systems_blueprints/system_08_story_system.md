@@ -48,6 +48,14 @@ flowchart TB
 
 ---
 
+## 🖼️ Visual Implementation Snapshot (NPC-001)
+
+Below is the verified in-game rendering of the player interacting with Agent Clog-001:
+
+![Agent Clog-001 Dialogue Interaction](../static/images/snapshots/npc_001_screenshot.jpg)
+
+---
+
 ## 🛡️ Level 1 to 10 Boss Battles: Mechanical Algorithms
 
 ### Boss Battle 1: The Frosted Coil Behemoth (Level 3)
