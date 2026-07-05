@@ -58,52 +58,220 @@
         indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/'
       });
 
-      // Pre-install mock modules for imports that won't work in browser
+      // Pre-install comprehensive mock modules for browser-incompatible imports
       await pyodideInstance.runPythonAsync(`
 import sys
 import types
 
-# Mock 'time' module sleep to be a no-op in browser
+# -------------------------------------------------------
+# Mock 'time.sleep' to be a no-op in browser
+# -------------------------------------------------------
 import time as _real_time
 _real_time.sleep = lambda x: None
 
-# Create mock modules for browser-incompatible imports
-def _create_mock(name, attrs=None):
+# -------------------------------------------------------
+# Helper to create recursive mock objects that never fail
+# -------------------------------------------------------
+class _MockCallable:
+    """A callable mock that returns itself for chaining, and supports attribute access."""
+    def __init__(self, name="mock"):
+        self._name = name
+    def __call__(self, *args, **kwargs):
+        return self
+    def __getattr__(self, name):
+        return _MockCallable(f"{self._name}.{name}")
+    def __repr__(self):
+        return f"<Mock {self._name}>"
+    def __bool__(self):
+        return True
+    def __iter__(self):
+        return iter([])
+    def __len__(self):
+        return 0
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        pass
+    def __getitem__(self, key):
+        return _MockCallable(f"{self._name}[{key}]")
+
+def _create_deep_mock(name):
+    """Create a module that returns _MockCallable for any attribute access."""
     mod = types.ModuleType(name)
-    mod.__file__ = f"<mock {name}>"
-    if attrs:
-        for k, v in attrs.items():
-            setattr(mod, k, v)
-    return mod
+    mod.__file__ = f"<browser mock {name}>"
+    class _ModProxy(types.ModuleType):
+        def __getattr__(self, attr):
+            return _MockCallable(f"{name}.{attr}")
+    proxy = _ModProxy(name)
+    proxy.__file__ = f"<browser mock {name}>"
+    return proxy
 
-# Mock pygame
-pygame_mock = _create_mock('pygame')
-pygame_mock.init = lambda: None
-pygame_mock.quit = lambda: None
-pygame_mock.K_LEFT = 276
-pygame_mock.K_RIGHT = 275
-pygame_mock.K_UP = 273
-pygame_mock.K_DOWN = 274
-pygame_mock.K_a = 97
-pygame_mock.K_d = 100
-pygame_mock.K_w = 119
-pygame_mock.K_s = 115
-pygame_mock.SRCALPHA = 65536
-pygame_mock.QUIT = 256
-pygame_mock.KEYDOWN = 768
-pygame_mock.K_ESCAPE = 27
-pygame_mock.K_c = 99
-pygame_mock.K_l = 108
-sys.modules['pygame'] = pygame_mock
+# -------------------------------------------------------
+# Mock pygame and ALL sub-modules deeply
+# -------------------------------------------------------
+_pygame_submodules = [
+    'pygame', 'pygame.display', 'pygame.event', 'pygame.font',
+    'pygame.draw', 'pygame.time', 'pygame.image', 'pygame.mixer',
+    'pygame.key', 'pygame.mouse', 'pygame.transform', 'pygame.sprite',
+    'pygame.surface', 'pygame.rect', 'pygame.color', 'pygame.math',
+    'pygame.locals', 'pygame.cursors', 'pygame.mask'
+]
 
-# Mock google.genai
-google_mock = _create_mock('google')
-genai_mock = _create_mock('google.genai')
-types_mock = _create_mock('google.genai.types')
-google_mock.genai = genai_mock
-sys.modules['google'] = google_mock
-sys.modules['google.genai'] = genai_mock
-sys.modules['google.genai.types'] = types_mock
+for _mod_name in _pygame_submodules:
+    sys.modules[_mod_name] = _create_deep_mock(_mod_name)
+
+# Set commonly-used pygame constants directly on the top-level mock
+_pg = sys.modules['pygame']
+_pg.init = lambda: None
+_pg.quit = lambda: None
+
+# Event constants
+_pg.QUIT = 256
+_pg.KEYDOWN = 768
+_pg.KEYUP = 769
+_pg.MOUSEBUTTONDOWN = 1025
+_pg.MOUSEBUTTONUP = 1026
+
+# Key constants
+for _k, _v in {'K_LEFT': 276, 'K_RIGHT': 275, 'K_UP': 273, 'K_DOWN': 274,
+               'K_a': 97, 'K_d': 100, 'K_w': 119, 'K_s': 115,
+               'K_SPACE': 32, 'K_RETURN': 13, 'K_ESCAPE': 27,
+               'K_c': 99, 'K_l': 108, 'K_h': 104, 'K_t': 116}.items():
+    setattr(_pg, _k, _v)
+
+# Surface flags
+_pg.SRCALPHA = 65536
+_pg.FULLSCREEN = 0x80000000
+_pg.RESIZABLE = 0x10
+
+# Mock Surface class that supports chaining
+class _MockSurface:
+    def __init__(self, *args, **kwargs):
+        self._w = args[0][0] if args and isinstance(args[0], (tuple, list)) else 800
+        self._h = args[0][1] if args and isinstance(args[0], (tuple, list)) else 600
+    def fill(self, *a, **k): pass
+    def blit(self, *a, **k): pass
+    def get_rect(self, **k): return _MockRect(0, 0, self._w, self._h)
+    def get_size(self): return (self._w, self._h)
+    def get_width(self): return self._w
+    def get_height(self): return self._h
+    def set_alpha(self, *a): pass
+    def convert(self, *a): return self
+    def convert_alpha(self, *a): return self
+    def set_colorkey(self, *a): pass
+    def copy(self): return self
+    def subsurface(self, *a): return self
+
+class _MockRect:
+    def __init__(self, x=0, y=0, w=0, h=0):
+        self.x, self.y, self.width, self.height = x, y, w, h
+        self.top, self.left = y, x
+        self.bottom, self.right = y + h, x + w
+        self.centerx, self.centery = x + w // 2, y + h // 2
+        self.center = (self.centerx, self.centery)
+        self.topleft = (x, y)
+        self.size = (w, h)
+    def colliderect(self, other): return False
+    def clamp_ip(self, other): pass
+    def move(self, dx, dy): return _MockRect(self.x + dx, self.y + dy, self.width, self.height)
+
+_pg.Surface = _MockSurface
+_pg.Rect = _MockRect
+
+# Mock display sub-module specifically
+_display = sys.modules['pygame.display']
+_display.set_mode = lambda *a, **k: _MockSurface((800, 600))
+_display.set_caption = lambda *a: None
+_display.flip = lambda: None
+_display.update = lambda *a: None
+_display.get_surface = lambda: _MockSurface((800, 600))
+_pg.display = _display
+
+# Mock font sub-module
+class _MockFont:
+    def __init__(self, *a, **k): pass
+    def render(self, text, aa, color, *a): return _MockSurface((100, 20))
+    def size(self, text): return (100, 20)
+    def get_height(self): return 20
+
+_font = sys.modules['pygame.font']
+_font.init = lambda: None
+_font.Font = _MockFont
+_font.SysFont = lambda *a, **k: _MockFont()
+_pg.font = _font
+
+# Mock event sub-module
+_event = sys.modules['pygame.event']
+_event.get = lambda *a: []
+_event.pump = lambda: None
+_pg.event = _event
+
+# Mock time sub-module
+class _MockClock:
+    def __init__(self): pass
+    def tick(self, fps=60): return 16
+    def get_time(self): return 16
+    def get_fps(self): return 60.0
+
+_ptime = sys.modules['pygame.time']
+_ptime.Clock = _MockClock
+_ptime.get_ticks = lambda: 0
+_ptime.wait = lambda ms: None
+_ptime.delay = lambda ms: None
+_pg.time = _ptime
+
+# Mock draw sub-module
+_draw = sys.modules['pygame.draw']
+_draw.rect = lambda *a, **k: None
+_draw.circle = lambda *a, **k: None
+_draw.line = lambda *a, **k: None
+_draw.aaline = lambda *a, **k: None
+_draw.lines = lambda *a, **k: None
+_draw.polygon = lambda *a, **k: None
+_draw.ellipse = lambda *a, **k: None
+_pg.draw = _draw
+
+# Mock key sub-module
+_key = sys.modules['pygame.key']
+_key.get_pressed = lambda: [0] * 512
+_key.get_mods = lambda: 0
+_pg.key = _key
+
+# Mock image sub-module
+_img = sys.modules['pygame.image']
+_img.load = lambda *a: _MockSurface((64, 64))
+_img.save = lambda *a: None
+_pg.image = _img
+
+# Mock transform sub-module
+_transform = sys.modules['pygame.transform']
+_transform.scale = lambda surf, size: _MockSurface(size)
+_transform.rotate = lambda surf, angle: surf
+_transform.flip = lambda surf, xbool, ybool: surf
+_pg.transform = _transform
+
+# Mock mouse
+_mouse = sys.modules['pygame.mouse']
+_mouse.get_pos = lambda: (0, 0)
+_mouse.get_pressed = lambda: (0, 0, 0)
+_pg.mouse = _mouse
+
+# Mock mixer
+_mixer = sys.modules['pygame.mixer']
+_mixer.init = lambda *a, **k: None
+_mixer.quit = lambda: None
+_mixer.Sound = _MockCallable("pygame.mixer.Sound")
+_mixer.music = _MockCallable("pygame.mixer.music")
+_pg.mixer = _mixer
+
+# -------------------------------------------------------
+# Mock google.genai and sub-modules
+# -------------------------------------------------------
+for _mod_name in ['google', 'google.genai', 'google.genai.types']:
+    sys.modules[_mod_name] = _create_deep_mock(_mod_name)
+sys.modules['google'].genai = sys.modules['google.genai']
+
+print("[Pyodide] Python engine loaded. Mocks for pygame & google.genai active.")
       `);
 
       pyodideReady = true;
@@ -122,60 +290,79 @@ sys.modules['google.genai.types'] = types_mock
 
   /**
    * Execute Python code and capture stdout/stderr output.
+   * 
+   * KEY FIX: Instead of wrapping user code inside try/except (which breaks
+   * indentation), we use exec() with a clean namespace and catch errors
+   * at the JavaScript level.
    */
   async function runPythonCode(code, outputEl, runBtn) {
     runBtn.textContent = '⏳ Running...';
     runBtn.disabled = true;
     outputEl.style.display = 'block';
     outputEl.textContent = '';
+    outputEl.classList.remove('has-error');
 
     try {
       const pyodide = await loadPyodideEngine();
 
-      // Redirect stdout/stderr to capture output
-      await pyodide.runPythonAsync(`
-import sys
-from io import StringIO
-_captured_out = StringIO()
-_captured_err = StringIO()
-sys.stdout = _captured_out
-sys.stderr = _captured_err
-      `);
-
-      // Clean the code: remove interactive elements that break in browser
+      // Clean the code for browser compatibility
       let cleanCode = code
-        // Replace input() calls with mock values
+        // Replace input() calls with mock values so they don't hang
         .replace(/(\w+)\s*=\s*input\([^)]*\)/g, '$1 = "72"')
+        // Replace bare input() calls
+        .replace(/\binput\([^)]*\)/g, '"72"')
         // Remove sys.exit() calls
         .replace(/sys\.exit\(\d*\)/g, 'pass')
         // Remove exit() calls
-        .replace(/\bexit\(\d*\)/g, 'pass');
+        .replace(/\bexit\(\d*\)/g, 'pass')
+        // Replace if __name__ == "__main__": main() with just main()
+        .replace(/if\s+__name__\s*==\s*["']__main__["']\s*:\s*\n\s*main\(\)/g, 'main()');
 
-      // Wrap in try/except to catch runtime errors gracefully
-      const wrappedCode = `
+      // Store code in a Python variable (avoids JS string escaping issues)
+      // We use a unique variable name to avoid collisions
+      pyodide.globals.set('__browser_code__', cleanCode);
+
+      // Execute using exec() inside Python, which handles indentation naturally
+      const result = await pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+
+_captured_out = StringIO()
+_captured_err = StringIO()
+_old_stdout = sys.stdout
+_old_stderr = sys.stderr
+sys.stdout = _captured_out
+sys.stderr = _captured_err
+
+_exec_error = ""
 try:
-${cleanCode.split('\n').map(line => '    ' + line).join('\n')}
+    exec(__browser_code__, {"__name__": "__main__", "__builtins__": __builtins__})
 except SystemExit:
     pass
 except Exception as _e:
-    print(f"Error: {type(_e).__name__}: {_e}")
-`;
+    _exec_error = f"{type(_e).__name__}: {_e}"
 
-      await pyodide.runPythonAsync(wrappedCode);
+sys.stdout = _old_stdout
+sys.stderr = _old_stderr
 
-      // Get captured output
-      const stdout = await pyodide.runPythonAsync(`_captured_out.getvalue()`);
-      const stderr = await pyodide.runPythonAsync(`_captured_err.getvalue()`);
+_out = _captured_out.getvalue()
+_err = _captured_err.getvalue()
+if _exec_error:
+    _err = _exec_error + ("\\n" + _err if _err else "")
+_out + "\\n__STDERR__\\n" + _err
+`);
 
-      // Reset stdout/stderr
-      await pyodide.runPythonAsync(`
-sys.stdout = sys.__stdout__
-sys.stderr = sys.__stderr__
-      `);
+      // Parse output: split on __STDERR__ marker
+      const parts = result.split('\n__STDERR__\n');
+      const stdout = parts[0] || '';
+      const stderr = parts[1] || '';
 
       let output = '';
-      if (stdout) output += stdout;
-      if (stderr) output += '\n' + stderr;
+      if (stdout.trim()) output += stdout;
+      if (stderr.trim()) {
+        if (output) output += '\n';
+        output += stderr;
+      }
 
       if (output.trim()) {
         outputEl.textContent = output.trimEnd();
@@ -183,15 +370,16 @@ sys.stderr = sys.__stderr__
         outputEl.textContent = '(No output — code executed successfully)';
       }
 
-      // Color output based on errors
       if (stderr && stderr.trim()) {
         outputEl.classList.add('has-error');
-      } else {
-        outputEl.classList.remove('has-error');
       }
 
     } catch (err) {
-      outputEl.textContent = `Execution Error: ${err.message}`;
+      // Extract the actual Python error message from the Pyodide wrapper
+      let msg = err.message || String(err);
+      // Clean up Pyodide traceback noise — show just the Python error
+      const pyErrMatch = msg.match(/(?:Error|Exception).*$/m);
+      outputEl.textContent = 'Error: ' + (pyErrMatch ? pyErrMatch[0] : msg);
       outputEl.classList.add('has-error');
     }
 
@@ -490,7 +678,7 @@ sys.stderr = sys.__stderr__
     updateProgressUI();
 
     console.log(
-      '%c🤖 Python Systems Thinking Training %cv2.0 — Pyodide Enabled',
+      '%c🤖 Python Systems Thinking Training %cv2.1 — Pyodide Engine Fixed',
       'color: #00d4ff; font-weight: bold; font-size: 14px;',
       'color: #00ff88; font-weight: bold; font-size: 14px;'
     );
