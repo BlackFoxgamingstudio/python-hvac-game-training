@@ -83,22 +83,77 @@
       this.cycleCount = 0;
       this.isRunning = false;
       this.coolingPower = 0.35;
-      this.refrigerant = { temp: 40, pressure: 68, state: 'liquid' };
+      this.faultMode = 'NONE'; // 'NONE' | 'LOW_CHARGE' | 'DIRTY_CONDENSER' | 'STUCK_VALVE'
+      
+      // Live pressures and temperatures (Equalized at startup)
+      this.suctionPressure = 150;
+      this.dischargePressure = 150;
+      this.superheat = 0;
+      this.subcooling = 0;
+      this.evaporatorTemp = 72;
+      this.condenserTemp = 95;
+      this.deltaT = 0;
+      this.tickCount = 0;
     }
-    runCycle(currentTemp) {
-      this.isRunning = true;
-      this.cycleCount++;
-      // Simplified cycle — same as Python version
-      // Evaporator absorbs heat → compressor → condenser → expansion
-      this.refrigerant.temp = 40 + 15; // after evaporator
-      this.refrigerant.state = 'gas';
-      this.refrigerant.temp += 80;     // after compressor
-      this.refrigerant.pressure = 68 * 6;
-      this.refrigerant.temp = 105;     // after condenser
-      this.refrigerant.state = 'liquid';
-      this.refrigerant.temp = 40;      // after expansion valve
-      this.refrigerant.pressure = 68;
-      return Math.max(65, currentTemp - this.coolingPower);
+
+    update(isActive, currentTemp, outdoorTemp = 95) {
+      this.isRunning = isActive;
+      this.tickCount++;
+
+      if (!isActive) {
+        // Equalize pressures back to ambient when system is OFF
+        this.suctionPressure += (150 - this.suctionPressure) * 0.05;
+        this.dischargePressure += (150 - this.dischargePressure) * 0.05;
+        this.superheat += (0 - this.superheat) * 0.05;
+        this.subcooling += (0 - this.subcooling) * 0.05;
+        this.evaporatorTemp += (currentTemp - this.evaporatorTemp) * 0.05;
+        this.condenserTemp += (outdoorTemp - this.condenserTemp) * 0.05;
+        this.deltaT += (0 - this.deltaT) * 0.05;
+        return currentTemp;
+      }
+
+      // Dynamic oscillation to look like real live telemetry
+      const noise = Math.sin(this.tickCount * 0.05);
+
+      if (this.faultMode === 'NONE') {
+        this.coolingPower = 0.35;
+        this.suctionPressure += (70 + noise * 1 - this.suctionPressure) * 0.08;
+        this.dischargePressure += (410 + noise * 3 - this.dischargePressure) * 0.08;
+        this.superheat += (10.0 + noise * 0.3 - this.superheat) * 0.08;
+        this.subcooling += (12.0 + noise * 0.4 - this.subcooling) * 0.08;
+        this.evaporatorTemp += (42.0 - this.evaporatorTemp) * 0.08;
+        this.condenserTemp += (95.0 - this.condenserTemp) * 0.08;
+        this.deltaT += (18.0 + noise * 0.2 - this.deltaT) * 0.08;
+      } else if (this.faultMode === 'LOW_CHARGE') {
+        this.coolingPower = 0.12;
+        this.suctionPressure += (45 + noise * 0.8 - this.suctionPressure) * 0.08;
+        this.dischargePressure += (310 + noise * 2 - this.dischargePressure) * 0.08;
+        this.superheat += (28.0 + noise * 0.8 - this.superheat) * 0.08; // High superheat
+        this.subcooling += (3.0 + noise * 0.2 - this.subcooling) * 0.08;  // Low subcooling
+        this.evaporatorTemp += (30.0 - this.evaporatorTemp) * 0.08; // Low evap temp (frozen)
+        this.condenserTemp += (85.0 - this.condenserTemp) * 0.08;
+        this.deltaT += (8.0 + noise * 0.2 - this.deltaT) * 0.08;
+      } else if (this.faultMode === 'DIRTY_CONDENSER') {
+        this.coolingPower = 0.08;
+        this.suctionPressure += (85 + noise * 1.5 - this.suctionPressure) * 0.08;
+        this.dischargePressure += (485 + noise * 5 - this.dischargePressure) * 0.08; // High head
+        this.superheat += (6.0 + noise * 0.2 - this.superheat) * 0.08;
+        this.subcooling += (4.0 + noise * 0.3 - this.subcooling) * 0.08;
+        this.evaporatorTemp += (50.0 - this.evaporatorTemp) * 0.08;
+        this.condenserTemp += (125.0 - this.condenserTemp) * 0.08; // Hot condenser
+        this.deltaT += (9.0 + noise * 0.2 - this.deltaT) * 0.08;
+      } else if (this.faultMode === 'STUCK_VALVE') {
+        this.coolingPower = 0.04;
+        this.suctionPressure += (35 + noise * 0.5 - this.suctionPressure) * 0.08;
+        this.dischargePressure += (290 + noise * 2 - this.dischargePressure) * 0.08;
+        this.superheat += (35.0 + noise * 1.0 - this.superheat) * 0.08;
+        this.subcooling += (15.0 + noise * 0.5 - this.subcooling) * 0.08;
+        this.evaporatorTemp += (24.0 - this.evaporatorTemp) * 0.08; // Coil freezes
+        this.condenserTemp += (80.0 - this.condenserTemp) * 0.08;
+        this.deltaT += (4.0 + noise * 0.1 - this.deltaT) * 0.08;
+      }
+
+      return Math.max(65.0, currentTemp - this.coolingPower);
     }
     stop() { this.isRunning = false; }
   }
@@ -153,7 +208,10 @@
 
       // AC cooling
       if (this.acActive) {
-        this.internalTemp = this.ac.runCycle(this.internalTemp);
+        if (!this.ac.isRunning) {
+          this.ac.cycleCount++;
+        }
+        this.internalTemp = this.ac.update(true, this.internalTemp);
         // Cool particles
         if (Math.random() < 0.5) {
           particles.push(new Particle(
@@ -166,6 +224,8 @@
           this.acActive = false;
           this.ac.stop();
         }
+      } else {
+        this.ac.update(false, this.internalTemp);
       }
 
       this.internalTemp = Math.max(40, Math.min(this.maxTemp, this.internalTemp));
@@ -180,6 +240,14 @@
     toggleAC() {
       this.acActive = !this.acActive;
       if (!this.acActive) this.ac.stop();
+    }
+
+    injectFault(faultMode) {
+      this.ac.faultMode = faultMode;
+      // If we inject a fault, activate AC to demonstrate the thermodynamic feedback
+      if (faultMode !== 'NONE') {
+        this.acActive = true;
+      }
     }
 
     getColor() {
@@ -289,6 +357,14 @@
         acCycles: this.ac.cycleCount,
         steps: this.steps,
         direction: this.direction,
+        fault: this.ac.faultMode,
+        suction_psi: Math.round(this.ac.suctionPressure),
+        discharge_psi: Math.round(this.ac.dischargePressure),
+        superheat: Number(this.ac.superheat.toFixed(1)),
+        subcooling: Number(this.ac.subcooling.toFixed(1)),
+        evap_temp: Number(this.ac.evaporatorTemp.toFixed(1)),
+        cond_temp: Number(this.ac.condenserTemp.toFixed(1)),
+        delta_t: Number(this.ac.deltaT.toFixed(1))
       };
     }
   }
@@ -368,7 +444,7 @@
 
     // Telemetry panel
     if (showTelemetry) {
-      const pw = 200, ph = 195;
+      const pw = 200, ph = 210;
       const px = W - pw - 12, py = 60;
 
       // Panel background
@@ -394,13 +470,14 @@
       ctx.stroke();
 
       const lines = [
-        [`Position`, `(${telemetry.x}, ${telemetry.y})`, C.white],
-        [`Direction`, telemetry.direction.toUpperCase(), C.white],
-        [`Steps`, `${telemetry.steps}`, C.white],
         [`Temperature`, `${telemetry.temp.toFixed(1)}°F`, tempColor],
+        [`Suction Press.`, `${telemetry.suction_psi} PSI`, C.white],
+        [`Discharge Press.`, `${telemetry.discharge_psi} PSI`, telemetry.discharge_psi > 450 ? C.red : C.white],
+        [`Superheat`, `${telemetry.superheat}°F`, telemetry.superheat > 20 ? C.orange : C.white],
+        [`Subcooling`, `${telemetry.subcooling}°F`, telemetry.subcooling < 5 ? C.orange : C.white],
+        [`Delta-T`, `${telemetry.delta_t}°F`, C.white],
         [`AC System`, telemetry.acRunning ? 'ON' : 'OFF', telemetry.acRunning ? C.cyan : 'rgba(255,255,255,0.4)'],
-        [`AC Cycles`, `${telemetry.acCycles}`, C.white],
-        [`Status`, telemetry.temp >= 92 ? '🔴 OVERHEAT' : telemetry.temp >= 80 ? '🟡 WARM' : '🟢 NOMINAL', C.white],
+        [`Active Fault`, telemetry.fault === 'NONE' ? '🟢 NONE' : `🚨 ${telemetry.fault.replace('_', ' ')}`, telemetry.fault === 'NONE' ? C.green : C.red],
       ];
 
       lines.forEach((line, i) => {
@@ -451,6 +528,7 @@
     const H = canvas.height;
 
     let robot = new Robot(W / 2 - 22, H / 2 - 27, 'Atlas');
+    canvas.robotRef = robot;
     let particles = [];
     let keys = {};
     let showTelemetry = true;
@@ -463,6 +541,7 @@
       if (e.code === 'KeyT') showTelemetry = !showTelemetry;
       if (e.code === 'KeyR') {
         robot = new Robot(W / 2 - 22, H / 2 - 27, 'Atlas');
+        canvas.robotRef = robot;
         particles = [];
       }
     };

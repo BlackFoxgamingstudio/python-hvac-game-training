@@ -346,18 +346,283 @@ print(f"{'═' * 50}")</code></pre>
     </section>
 
     <!-- ── Interactive Final Project Game ── -->
+    <style>
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-lg);
+        margin-top: var(--space-lg);
+      }
+      @media(max-width: 768px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+      }
+      .dashboard-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+      }
+      .dashboard-card h3 {
+        color: var(--accent-cyan);
+        font-size: 1.1rem;
+        margin-bottom: var(--space-sm);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .gauge-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
+      }
+      .gauge-box {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-sm);
+        padding: var(--space-sm);
+        text-align: center;
+      }
+      .gauge-val {
+        font-family: var(--font-mono);
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--text-primary);
+        margin-top: 2px;
+      }
+      .gauge-lbl {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+      }
+      .fault-btn-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .btn-fault {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 8px var(--space-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        text-align: left;
+      }
+      .btn-fault:hover {
+        background: var(--surface-hover);
+        border-color: var(--border-hover);
+        color: #fff;
+      }
+      .btn-fault.active-fault {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: var(--accent-red);
+        color: #fff;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+      }
+      .btn-fault.active-nominal {
+        background: rgba(60, 216, 104, 0.15);
+        border-color: var(--accent-green);
+        color: #fff;
+        box-shadow: 0 0 10px rgba(60, 216, 104, 0.2);
+      }
+      .fdd-container {
+        min-height: 80px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-sm);
+        padding: var(--space-sm);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      .fdd-alert-item {
+        color: var(--accent-orange);
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+        animation: pulse 2s infinite;
+        font-family: var(--font-mono);
+      }
+      .fdd-alert-nominal {
+        color: var(--accent-green);
+        font-size: 0.85rem;
+        font-family: var(--font-family);
+      }
+      .ai-diagnose-card {
+        grid-column: 1 / -1;
+        background: rgba(123, 47, 247, 0.03);
+        border-color: rgba(123, 47, 247, 0.15);
+      }
+      .btn-ai-diagnose {
+        width: 100%;
+        background: var(--gradient-accent);
+        border: none;
+        color: #fff;
+        padding: 10px;
+        border-radius: var(--radius-md);
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: var(--space-md);
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      }
+      .btn-ai-diagnose:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-glow-purple);
+      }
+      .ai-response-box {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(123, 47, 247, 0.2);
+        border-radius: var(--radius-sm);
+        padding: var(--space-md);
+        min-height: 120px;
+        max-height: 250px;
+        overflow-y: auto;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+      }
+      .ai-response-box h3, .ai-response-box h4 {
+        color: #fff;
+        margin-top: var(--space-sm);
+        margin-bottom: var(--space-xs);
+      }
+      .ai-response-box ul {
+        margin-left: var(--space-md);
+        margin-bottom: var(--space-sm);
+      }
+      .ai-response-box code {
+        font-family: var(--font-mono);
+        background: rgba(255,255,255,0.08);
+        padding: 2px 4px;
+        border-radius: 3px;
+        color: var(--accent-cyan);
+      }
+      .trend-card {
+        grid-column: 1 / -1;
+      }
+      .trend-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      .trend-table th, .trend-table td {
+        padding: 8px var(--space-sm);
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+      }
+      .trend-table th {
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+      }
+      .text-red { color: var(--accent-red); font-weight: bold; }
+      .text-green { color: var(--accent-green); font-weight: bold; }
+      
+      @keyframes pulse {
+        0% { opacity: 0.8; }
+        50% { opacity: 1; text-shadow: 0 0 5px rgba(255,140,0,0.5); }
+        100% { opacity: 0.8; }
+      }
+    </style>
+
     <section class="glass-card" id="interactive-game">
-      <h2>🎮 Final Project Interactive Sandbox</h2>
+      <h2>🎮 Final Project Interactive Systems Dashboard</h2>
       <p>
-        Experience the fully integrated systems model in your browser! This simulation implements the classes,
-        telemetry logging intervals, and AC cycle control loops from the final project Python design. 
-        Click to focus and take the robot for a spin.
+        Experience the complete physical systems mapping inside this real-time simulator. Click to focus and guide the Robot around with the keyboard, inject hardware faults, monitor DDC threshold FDD diagnostics, and consult the generative Gemini AI brain.
       </p>
       
       <div class="game-container">
         <div class="game-canvas-wrapper">
           <canvas id="module8-game-canvas" width="900" height="650"></canvas>
         </div>
+
+        <div class="dashboard-grid">
+          <!-- Live BAS Readouts -->
+          <div class="dashboard-card">
+            <h3>📡 BAS Digital Readout (Sensor Variables)</h3>
+            <div class="gauge-row">
+              <div class="gauge-box">
+                <div class="gauge-val" id="m8-gauge-evap">72.0°F</div>
+                <div class="gauge-lbl">Evap Coil</div>
+              </div>
+              <div class="gauge-box">
+                <div class="gauge-val" id="m8-gauge-suction">150 PSI</div>
+                <div class="gauge-lbl">Suction</div>
+              </div>
+              <div class="gauge-box">
+                <div class="gauge-val" id="m8-gauge-discharge">150 PSI</div>
+                <div class="gauge-lbl">Discharge</div>
+              </div>
+            </div>
+            <div class="gauge-row">
+              <div class="gauge-box" style="grid-column: span 2;">
+                <div class="gauge-val" id="m8-gauge-sh-sc">SH: 0.0°F / SC: 0.0°F</div>
+                <div class="gauge-lbl">Superheat / Subcooling</div>
+              </div>
+              <div class="gauge-box">
+                <div class="gauge-val" id="m8-gauge-deltat">0.0°F</div>
+                <div class="gauge-lbl">Delta-T</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fault Injector -->
+          <div class="dashboard-card">
+            <h3>🛠️ Dynamic Fault Injector (FDD Simulator)</h3>
+            <div class="fault-btn-group">
+              <button class="btn-fault active-nominal" id="btn-fault-none" onclick="injectFaultM8('NONE')">🟢 Nominal System</button>
+              <button class="btn-fault" id="btn-fault-charge" onclick="injectFaultM8('LOW_CHARGE')">🚨 Low Ref. Charge</button>
+              <button class="btn-fault" id="btn-fault-condenser" onclick="injectFaultM8('DIRTY_CONDENSER')">🚨 Dirty Condenser</button>
+              <button class="btn-fault" id="btn-fault-valve" onclick="injectFaultM8('STUCK_VALVE')">🚨 Stuck Exp. Valve</button>
+            </div>
+            <div style="margin-top: 12px;">
+              <div class="gauge-lbl" style="margin-bottom: 4px;">DDC Threshold FDD Alerts:</div>
+              <div class="fdd-container" id="m8-fdd-alerts">
+                <div class="fdd-alert-nominal">🟢 Nominal. No threshold alarms triggered.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Diagnostic Console -->
+          <div class="dashboard-card ai-diagnose-card">
+            <h3>🧠 Smart Building Analytics (Gemini AI Integration)</h3>
+            <button class="btn-ai-diagnose" id="btn-ai-diagnose" onclick="runAIDiagnosticsM8()">
+              <span>⚡ CONSULT GEMINI AI DIAGNOSTIC TECHNICIAN</span>
+            </button>
+            <div class="ai-response-box" id="m8-ai-response">
+              <em>Diagnostic reports from the Gemini API will render here. Click the button above to request root-cause analysis based on live thermodynamic sensor telemetry.</em>
+            </div>
+          </div>
+
+          <!-- BAS Trend Log Table -->
+          <div class="dashboard-card trend-card">
+            <h3>📊 BAS Trend Log (CSV Exporter Table)</h3>
+            <table class="trend-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Cycle</th>
+                  <th>Room Temp</th>
+                  <th>Evap Temp</th>
+                  <th>Suction</th>
+                  <th>Discharge</th>
+                  <th>SH</th>
+                  <th>SC</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="m8-csv-tbody">
+                <tr>
+                  <td colspan="9" style="text-align: center; color: var(--text-muted);">No records logged yet. Run the AC cycle to log trend data.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="game-instructions-overlay">
           <div class="game-instruction-col">
             <h4>🕹️ Keyboard Controls</h4>
@@ -543,9 +808,169 @@ print(f"{'═' * 50}")</code></pre>
   <script src="../static/js/app.js"></script>
   <script src="../static/js/game.js"></script>
   <script>
+    let m8Canvas;
+    let csvHistory = [];
+    let lastLoggedFrame = -1;
+
     document.addEventListener('DOMContentLoaded', () => {
       RobotHVACGame.init('module8-game-canvas');
+      m8Canvas = document.getElementById('module8-game-canvas');
+      setupBASTelemetryLoop();
     });
+
+    function injectFaultM8(faultMode) {
+      if (!m8Canvas || !m8Canvas.robotRef) return;
+      
+      // Inject fault mode into simulator
+      m8Canvas.robotRef.injectFault(faultMode);
+
+      // Update button states
+      const buttons = {
+        'NONE': 'btn-fault-none',
+        'LOW_CHARGE': 'btn-fault-charge',
+        'DIRTY_CONDENSER': 'btn-fault-condenser',
+        'STUCK_VALVE': 'btn-fault-valve'
+      };
+
+      for (let mode in buttons) {
+        const btn = document.getElementById(buttons[mode]);
+        if (mode === faultMode) {
+          if (mode === 'NONE') {
+            btn.className = 'btn-fault active-nominal';
+          } else {
+            btn.className = 'btn-fault active-fault';
+          }
+        } else {
+          btn.className = 'btn-fault';
+        }
+      }
+    }
+
+    async function runAIDiagnosticsM8() {
+      if (!m8Canvas || !m8Canvas.robotRef) return;
+      
+      const btn = document.getElementById('btn-ai-diagnose');
+      const responseBox = document.getElementById('m8-ai-response');
+      const telemetry = m8Canvas.robotRef.getTelemetry();
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⚡ ANALYZING SYSTEM TELEMETRY WITH AI...</span>';
+      responseBox.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--accent-purple);animation:pulse 1s infinite;"><span>⚙️ Sending live data payload to Gemini API...</span></div>';
+
+      try {
+        const response = await fetch('/api/diagnose', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(telemetry)
+        });
+
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          responseBox.innerHTML = parseMarkdown(data.diagnosis);
+        } else {
+          responseBox.innerHTML = parseMarkdown(data.diagnosis || `### ⚠️ Diagnostic Error\n\n${data.message}`);
+        }
+      } catch (err) {
+        responseBox.innerHTML = `### ❌ Network Error\n\nFailed to reach the diagnostics endpoint: \`${err.message}\`. Make sure your server is running.`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡ CONSULT GEMINI AI DIAGNOSTIC TECHNICIAN</span>';
+      }
+    }
+
+    function setupBASTelemetryLoop() {
+      setInterval(() => {
+        if (!m8Canvas || !m8Canvas.robotRef) return;
+        const t = m8Canvas.robotRef.getTelemetry();
+
+        // 1. Update gauges
+        document.getElementById('m8-gauge-evap').innerText = t.evap_temp.toFixed(1) + '°F';
+        document.getElementById('m8-gauge-suction').innerText = t.suction_psi + ' PSI';
+        document.getElementById('m8-gauge-discharge').innerText = t.discharge_psi + ' PSI';
+        document.getElementById('m8-gauge-sh-sc').innerText = `SH: ${t.superheat.toFixed(1)}°F / SC: ${t.subcooling.toFixed(1)}°F`;
+        document.getElementById('m8-gauge-deltat').innerText = t.delta_t.toFixed(1) + '°F';
+
+        // 2. FDD Threshold checking
+        const alerts = [];
+        if (t.acRunning) {
+          if (t.suction_psi < 50) {
+            alerts.push('🚨 FDD WARNING: Low Suction Pressure (Evaporator freezing hazard)');
+          }
+          if (t.discharge_psi > 450) {
+            alerts.push('🚨 FDD ALARM: High Discharge Pressure (Dirty Condenser / Blocked Airflow)');
+          }
+          if (t.superheat > 25) {
+            alerts.push('⚠️ FDD INFO: Excessive Superheat (Starving evaporator coil)');
+          }
+          if (t.subcooling < 5) {
+            alerts.push('⚠️ FDD INFO: Low Subcooling (Insufficient condenser heat rejection)');
+          }
+        }
+
+        const alertContainer = document.getElementById('m8-fdd-alerts');
+        if (alerts.length > 0) {
+          alertContainer.innerHTML = alerts.map(a => `<div class="fdd-alert-item">${a}</div>`).join('');
+        } else {
+          alertContainer.innerHTML = '<div class="fdd-alert-nominal">🟢 Nominal. No threshold alarms triggered.</div>';
+        }
+
+        // 3. Log CSV trends dynamically
+        if (t.acRunning && t.steps > lastLoggedFrame) {
+          lastLoggedFrame = t.steps;
+          
+          const csvRow = {
+            timestamp: new Date().toLocaleTimeString(),
+            cycle: t.acCycles,
+            room_temp: t.temp.toFixed(1),
+            evap_temp: t.evap_temp.toFixed(1),
+            suction_psi: t.suction_psi,
+            discharge_psi: t.discharge_psi,
+            superheat: t.superheat.toFixed(1),
+            subcooling: t.subcooling.toFixed(1),
+            status: t.fault !== 'NONE' ? 'FAULT' : 'NORMAL'
+          };
+
+          csvHistory.unshift(csvRow);
+          if (csvHistory.length > 5) csvHistory.pop();
+
+          const tbody = document.getElementById('m8-csv-tbody');
+          tbody.innerHTML = csvHistory.map(row => `
+            <tr>
+              <td>${row.timestamp}</td>
+              <td>${row.cycle}</td>
+              <td>${row.room_temp}°F</td>
+              <td>${row.evap_temp}°F</td>
+              <td>${row.suction_psi} PSI</td>
+              <td>${row.discharge_psi} PSI</td>
+              <td>${row.superheat}°F</td>
+              <td>${row.subcooling}°F</td>
+              <td class="${row.status === 'FAULT' ? 'text-red' : 'text-green'}">${row.status}</td>
+            </tr>
+          `).join('');
+        }
+      }, 1000);
+    }
+
+    function parseMarkdown(text) {
+      return text
+        .replace(/^### (.*$)/gim, '<h4>$1</h4>')
+        .replace(/^## (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^# (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^\* (.*$)/gim, '<li>$1</li>')
+        .replace(/^\- (.*$)/gim, '<li>$1</li>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .split('\n')
+        .map(line => {
+          let trimmed = line.trim();
+          if (!trimmed) return '';
+          if (trimmed.startsWith('<li>') || trimmed.startsWith('<h') || trimmed.startsWith('<div')) return line;
+          return `<p>${line}</p>`;
+        })
+        .join('');
+    }
   </script>
 </body>
 </html>

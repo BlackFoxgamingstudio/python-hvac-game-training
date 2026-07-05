@@ -112,6 +112,83 @@ class TrainingServerHandler(SimpleHTTPRequestHandler):
                 self._serve_file(filepath, content_type or "application/octet-stream")
             else:
                 self._serve_404()
+
+    def do_POST(self):
+        """Handle POST requests, specifically for AI diagnostics."""
+        path = self.path.split("?")[0]
+        
+        if path == "/api/diagnose":
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                post_data = self.rfile.read(content_length)
+                telemetry = json.loads(post_data.decode('utf-8'))
+                
+                # Fetch Gemini API Key
+                api_key = os.getenv("GEMINI_API_KEY")
+                if not api_key:
+                    response_data = {
+                        "status": "error",
+                        "message": "GEMINI_API_KEY environment variable is not configured on the server. Please set it to enable live AI analysis.",
+                        "diagnosis": "### ⚠️ AI Configuration Missing\n\nThe `GEMINI_API_KEY` environment variable is not configured on the host server.\n\n**Simulated Diagnostic Report (Nominal Data):**\n* **Head Pressure:** " + str(telemetry.get('discharge_psi', 410)) + " PSI\n* **Suction Pressure:** " + str(telemetry.get('suction_psi', 68)) + " PSI\n* **Fault Code:** " + str(telemetry.get('fault', 'None')) + "\n* **Analysis:** Please configure your Google Gemini API key to enable live smart-building analytics."
+                    }
+                else:
+                    try:
+                        from google import genai
+                        from google.genai import types
+                        
+                        client = genai.Client(api_key=api_key)
+                        
+                        system_instruction = (
+                            "You are a master HVAC technician and certified smart-building control automation engineer. "
+                            "Analyze the provided thermodynamic telemetry data, identify any faults (frozen coil, dirty condenser, low charge, stuck expansion valve), "
+                            "explain the physics of the fault, and provide a clear step-by-step remediation guide for the service technician."
+                        )
+                        
+                        prompt = f"""
+                        Analyze this system telemetry payload:
+                        - Zone Temperature: {telemetry.get('temp', 72.0):.1f}°F
+                        - Suction Pressure: {telemetry.get('suction_psi', 68):d} PSI
+                        - Discharge (Head) Pressure: {telemetry.get('discharge_psi', 410):d} PSI
+                        - Superheat: {telemetry.get('superheat', 10.0):.1f}°F
+                        - Subcooling: {telemetry.get('subcooling', 12.0):.1f}°F
+                        - Delta-T (Return vs Supply Air Temp): {telemetry.get('delta_t', 18.0):.1f}°F
+                        - Active Fault Code: {telemetry.get('fault', 'NONE')}
+                        
+                        Generate a comprehensive, markdown-formatted diagnostic report.
+                        """
+                        
+                        response = client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=prompt,
+                            config=types.GenerateContentConfig(
+                                system_instruction=system_instruction
+                            )
+                        )
+                        
+                        response_data = {
+                            "status": "success",
+                            "diagnosis": response.text
+                        }
+                    except Exception as e:
+                        response_data = {
+                            "status": "error",
+                            "message": f"Gemini API Call Failed: {str(e)}",
+                            "diagnosis": f"### ❌ API Call Failed\n\nFailed to invoke Gemini API model: `{str(e)}`."
+                        }
+                
+                data = json.dumps(response_data).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                
+            except Exception as e:
+                print(f"[ERROR] Failed to handle API request: {e}")
+                self._serve_500()
+        else:
+            self._serve_404()
+
     
     def _serve_file(self, filepath: Path, content_type: str):
         """Read and serve a file with the given content type."""
