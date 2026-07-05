@@ -589,9 +589,15 @@ print(f"{'═' * 50}")</code></pre>
           <!-- AI Diagnostic Console -->
           <div class="dashboard-card ai-diagnose-card">
             <h3>🧠 Smart Building Analytics (Gemini AI Integration)</h3>
-            <button class="btn-ai-diagnose" id="btn-ai-diagnose" onclick="runAIDiagnosticsM8()">
-              <span>⚡ CONSULT GEMINI AI DIAGNOSTIC TECHNICIAN</span>
-            </button>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: center;">
+              <button class="btn-ai-diagnose" id="btn-ai-diagnose" onclick="runAIDiagnosticsM8()" style="margin: 0; flex-grow: 1;">
+                <span>⚡ CONSULT GEMINI AI DIAGNOSTIC TECHNICIAN</span>
+              </button>
+              <div class="ai-vector-badge" title="AI-001 Prompt Vector is actively calibrated inside RobotBrain" style="background: rgba(34, 211, 238, 0.1); border: 1px solid var(--accent-cyan); border-radius: 4px; padding: 10px 14px; font-size: 0.8rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+                <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 10px var(--accent-green); animation: pulse 2s infinite;"></span>
+                <strong>AI-001: Calibrated (OK)</strong>
+              </div>
+            </div>
             <div class="ai-response-box" id="m8-ai-response">
               <em>Diagnostic reports from the Gemini API will render here. Click the button above to request root-cause analysis based on live thermodynamic sensor telemetry.</em>
             </div>
