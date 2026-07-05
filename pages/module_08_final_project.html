@@ -810,7 +810,8 @@ print(f"{'═' * 50}")</code></pre>
   <script>
     let m8Canvas;
     let csvHistory = [];
-    let lastLoggedFrame = -1;
+    let lastLoggedCycle = -1;
+    let lastLoggedTemp = -999;
 
     document.addEventListener('DOMContentLoaded', () => {
       RobotHVACGame.init('module8-game-canvas');
@@ -915,39 +916,45 @@ print(f"{'═' * 50}")</code></pre>
           alertContainer.innerHTML = '<div class="fdd-alert-nominal">🟢 Nominal. No threshold alarms triggered.</div>';
         }
 
-        // 3. Log CSV trends dynamically
-        if (t.acRunning && t.steps > lastLoggedFrame) {
-          lastLoggedFrame = t.steps;
-          
-          const csvRow = {
-            timestamp: new Date().toLocaleTimeString(),
-            cycle: t.acCycles,
-            room_temp: t.temp.toFixed(1),
-            evap_temp: t.evap_temp.toFixed(1),
-            suction_psi: t.suction_psi,
-            discharge_psi: t.discharge_psi,
-            superheat: t.superheat.toFixed(1),
-            subcooling: t.subcooling.toFixed(1),
-            status: t.fault !== 'NONE' ? 'FAULT' : 'NORMAL'
-          };
+        // 3. Log CSV trends dynamically when active and values change
+        if (t.acRunning) {
+          const tempDiff = Math.abs(t.temp - lastLoggedTemp);
+          const cycleChanged = t.acCycles !== lastLoggedCycle;
 
-          csvHistory.unshift(csvRow);
-          if (csvHistory.length > 5) csvHistory.pop();
+          if (cycleChanged || tempDiff >= 0.3) {
+            lastLoggedCycle = t.acCycles;
+            lastLoggedTemp = t.temp;
+            
+            const csvRow = {
+              timestamp: new Date().toLocaleTimeString(),
+              cycle: t.acCycles,
+              room_temp: t.temp.toFixed(1),
+              evap_temp: t.evap_temp.toFixed(1),
+              suction_psi: t.suction_psi,
+              discharge_psi: t.discharge_psi,
+              superheat: t.superheat.toFixed(1),
+              subcooling: t.subcooling.toFixed(1),
+              status: t.fault !== 'NONE' ? 'FAULT' : 'NORMAL'
+            };
 
-          const tbody = document.getElementById('m8-csv-tbody');
-          tbody.innerHTML = csvHistory.map(row => `
-            <tr>
-              <td>${row.timestamp}</td>
-              <td>${row.cycle}</td>
-              <td>${row.room_temp}°F</td>
-              <td>${row.evap_temp}°F</td>
-              <td>${row.suction_psi} PSI</td>
-              <td>${row.discharge_psi} PSI</td>
-              <td>${row.superheat}°F</td>
-              <td>${row.subcooling}°F</td>
-              <td class="${row.status === 'FAULT' ? 'text-red' : 'text-green'}">${row.status}</td>
-            </tr>
-          `).join('');
+            csvHistory.unshift(csvRow);
+            if (csvHistory.length > 5) csvHistory.pop();
+
+            const tbody = document.getElementById('m8-csv-tbody');
+            tbody.innerHTML = csvHistory.map(row => `
+              <tr>
+                <td>${row.timestamp}</td>
+                <td>${row.cycle}</td>
+                <td>${row.room_temp}°F</td>
+                <td>${row.evap_temp}°F</td>
+                <td>${row.suction_psi} PSI</td>
+                <td>${row.discharge_psi} PSI</td>
+                <td>${row.superheat}°F</td>
+                <td>${row.subcooling}°F</td>
+                <td class="${row.status === 'FAULT' ? 'text-red' : 'text-green'}">${row.status}</td>
+              </tr>
+            `).join('');
+          }
         }
       }, 1000);
     }
