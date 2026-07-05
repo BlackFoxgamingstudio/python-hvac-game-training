@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-001 Diagnostics Console</title>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --terminal-green: #39ff14;
+      --terminal-dim: #1e800a;
+      --terminal-bg: #051405;
+      --bezel-color: #1a1a1a;
+      --shadow-color: rgba(57, 255, 20, 0.2);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #0b0f0b;
+      color: var(--terminal-green);
+      font-family: 'Courier Prime', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Outer CRT Monitor Frame */
+    .crt-monitor {
+      background: #111111;
+      border: 20px solid #222222;
+      border-radius: 40px;
+      box-shadow: 
+        inset 0 0 80px rgba(0,0,0,0.9),
+        0 10px 40px rgba(0,0,0,0.8),
+        0 0 100px rgba(57, 255, 20, 0.1);
+      width: 900px;
+      height: 900px;
+      padding: 20px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-image: linear-gradient(135deg, #1e1e1e 0%, #111111 100%);
+    }
+
+    /* Bezel Screen Housing */
+    .screen-bezel {
+      background: #020802;
+      border: 8px solid #0a0a0a;
+      border-radius: 20px;
+      flex-grow: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 0 100px rgba(0,0,0,0.95);
+    }
+
+    /* CRT Scanline & Curved Screen Overlay Effect */
+    .screen-bezel::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.06));
+      z-index: 10;
+      background-size: 100% 4px, 6px 100%;
+      pointer-events: none;
+    }
+
+    /* Screen Flicker Animation */
+    .screen-bezel::after {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: rgba(18, 16, 16, 0.1);
+      opacity: 0;
+      z-index: 11;
+      pointer-events: none;
+      animation: flicker 0.15s infinite;
+    }
+
+    @keyframes flicker {
+      0% { opacity: 0.18; }
+      50% { opacity: 0.22; }
+      100% { opacity: 0.18; }
+    }
+
+    /* Inner Screen Contents */
+    .screen-content {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      text-shadow: 0 0 6px var(--terminal-green);
+    }
+
+    /* Header Panel */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--terminal-green);
+      padding-bottom: 12px;
+      margin-bottom: 30px;
+    }
+
+    .header-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .status-capsules {
+      display: flex;
+      gap: 12px;
+    }
+
+    .capsule {
+      border: 1.5px solid var(--terminal-green);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    /* Main Console Grid split */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 30px;
+      flex-grow: 1;
+    }
+
+    /* Validation Card */
+    .validation-card {
+      border: 2px solid var(--terminal-green);
+      border-radius: 12px;
+      padding: 24px;
+      background: rgba(57, 255, 20, 0.03);
+      position: relative;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      border-bottom: 1.5px dashed var(--terminal-green);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      font-weight: bold;
+    }
+
+    .log-line {
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .log-val {
+      color: #ffffff;
+      text-shadow: 0 0 8px #ffffff;
+    }
+
+    /* Left System Telemetry box */
+    .telemetry-box {
+      border: 1.5px solid var(--terminal-green);
+      padding: 16px;
+      margin-top: 24px;
+      border-radius: 8px;
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    /* Gauge / Dial Panel */
+    .gauge-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--terminal-green);
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      width: 260px;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* SVG Gauge Arc Styling */
+    .gauge-arc {
+      fill: none;
+      stroke: var(--terminal-dim);
+      stroke-width: 8;
+      stroke-linecap: round;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke: var(--terminal-green);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 400;
+      stroke-dashoffset: 400;
+      animation: fillGauge 2.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes fillGauge {
+      to { stroke-dashoffset: 160; }
+    }
+
+    /* Animated Needle */
+    .needle {
+      position: absolute;
+      width: 4px;
+      height: 95px;
+      background: var(--terminal-green);
+      bottom: 20px;
+      left: calc(50% - 2px);
+      transform-origin: bottom center;
+      box-shadow: 0 0 10px var(--terminal-green);
+      transform: rotate(-75deg);
+      animation: swingNeedle 2.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes swingNeedle {
+      to { transform: rotate(50deg); }
+    }
+
+    .needle-cap {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #020802;
+      border: 3px solid var(--terminal-green);
+      border-radius: 50%;
+      bottom: 8px;
+      left: calc(50% - 12px);
+      box-shadow: 0 0 8px var(--terminal-green);
+    }
+
+    .gauge-label {
+      font-size: 0.85rem;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .status-badge-glow {
+      background: rgba(57, 255, 20, 0.15);
+      border: 2px solid var(--terminal-green);
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 20px;
+      box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+      animation: pulseGlow 1.5s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      from { box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+      to { box-shadow: 0 0 25px rgba(57, 255, 20, 0.5); }
+    }
+
+    /* Physical CRT Buttons at the bottom of the Monitor */
+    .control-panel {
+      height: 80px;
+      border-top: 10px solid #222222;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px 40px;
+      background: #151515;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .led-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .led-label {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #888888;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .led-light {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--terminal-dim);
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);
+      transition: background 0.3s;
+    }
+
+    .led-light.active {
+      background: var(--terminal-green);
+      box-shadow: 0 0 12px var(--terminal-green), inset 0 1px 4px rgba(255,255,255,0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="crt-monitor">
+    <!-- Monitor Screen Screen Bezel Frame -->
+    <div class="screen-bezel">
+      <div class="screen-content">
+        
+        <!-- Header status bars -->
+        <div class="header-bar">
+          <div class="header-title">AI-001 PROMPT DIAGNOSTIC</div>
+          <div class="status-capsules">
+            <span class="capsule">SYNC</span>
+            <span class="capsule">VALID</span>
+            <span class="capsule" style="background-color: var(--terminal-green); color: var(--terminal-bg);">OK</span>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <!-- Verification logs card -->
+          <div class="validation-card">
+            <div class="section-title">AI-001 VALIDATION [OK]</div>
+            
+            <div class="log-line">:: PMPT VEC: <span class="log-val">SPARKS_EMITTER_VECTOR_CALIBRATION</span></div>
+            
+            <div class="log-line" style="margin-top: 20px; line-height: 1.6;">
+              :: <span class="log-val">AI-001 verifies that sparks particle emitter vectors are calibrated to animate sweeping dial pointer sweeps.</span>
+            </div>
+
+            <div class="log-line" style="margin-top: 20px;">:: STATUS: <span class="log-val" style="color: #ffffff; background: rgba(57,255,20,0.2); padding: 2px 6px; border-radius: 3px;">SUCCESS</span></div>
+
+            <div class="log-line" style="margin-top: 24px;">:: VEC_XY_ARC: <span class="log-val">[45.8°, 178.4°]</span></div>
+            <div class="log-line">:: ANIMATION_CURVE: <span class="log-val">L_EASE_OUT</span></div>
+            <div class="log-line">:: SYNC: <span class="log-val">99.7%</span></div>
+            <div class="log-line">:: LOG_TS: <span class="log-val" id="current-timestamp">2026-07-05 03:54:14</span></div>
+            
+            <div class="log-line" style="margin-top: 24px; border-top: 1.5px dashed var(--terminal-dim); padding-top: 16px;">
+              :: CALIBRATION COMPLETE.
+            </div>
+
+            <!-- Nested system telemetry info -->
+            <div class="telemetry-box">
+              <div class="telemetry-row">
+                <span>TEMP:</span>
+                <span class="log-val">43.7°C (NOM)</span>
+              </div>
+              <div class="telemetry-row">
+                <span>LOAD:</span>
+                <span class="log-val">78.4% (ACT)</span>
+              </div>
+              <div class="telemetry-row">
+                <span>MEM:</span>
+                <span class="log-val">14.3GB (OK)</span>
+              </div>
+              <div class="telemetry-row">
+                <span>CYCLES:</span>
+                <span class="log-val">1,942,001 (ACT)</span>
+              </div>
+              <div class="telemetry-row" style="margin-top: 8px; font-weight: bold;">
+                <span>AI CORE:</span>
+                <span class="log-val" style="color: var(--terminal-green);">ONLINE / RUNNING</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sweeping dial gauge card -->
+          <div class="gauge-panel">
+            <div class="section-title" style="width: 100%; text-align: center;">SPARKS EMITTER VECTOR</div>
+            
+            <div class="gauge-wrapper">
+              <svg width="220" height="220" viewBox="0 0 200 200">
+                <path class="gauge-arc" d="M 30,160 A 85,85 0 1,1 170,160" />
+                <path class="gauge-fill" d="M 30,160 A 85,85 0 1,1 170,160" />
+              </svg>
+              <!-- Animated Needle pointer -->
+              <div class="needle"></div>
+              <div class="needle-cap"></div>
+            </div>
+            
+            <div class="gauge-label">
+              <span>0°</span>
+              <span style="float: right;">90°</span>
+            </div>
+
+            <div class="status-badge-glow">CALIBRATED</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Retro Monitor control buttons at base -->
+    <div class="control-panel">
+      <div class="led-group">
+        <span class="led-light active"></span>
+        <span class="led-label">RUN</span>
+      </div>
+      <div class="led-group">
+        <span class="led-light active"></span>
+        <span class="led-label">PWR</span>
+      </div>
+      <div class="led-group">
+        <span class="led-light active"></span>
+        <span class="led-label">STATUS</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Update timestamp dynamically
+    const now = new Date();
+    document.getElementById('current-timestamp').innerText = now.toISOString().replace('T', ' ').substring(0, 19);
+  </script>
+</body>
+</html>
