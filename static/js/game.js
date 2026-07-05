@@ -85,6 +85,11 @@
       this.coolingPower = 0.35;
       this.faultMode = 'NONE'; // 'NONE' | 'LOW_CHARGE' | 'DIRTY_CONDENSER' | 'STUCK_VALVE'
       
+      // Crankcase Heater tracking states
+      this.crankcaseHeaterActive = true;
+      this.heaterCycles = 1;
+      this.prevRunningState = false;
+
       // Live pressures and temperatures (Equalized at startup)
       this.suctionPressure = 150;
       this.dischargePressure = 150;
@@ -101,6 +106,12 @@
       this.tickCount++;
 
       if (!isActive) {
+        this.crankcaseHeaterActive = true;
+        if (this.prevRunningState === true) {
+          this.heaterCycles++;
+        }
+        this.prevRunningState = false;
+
         // Equalize pressures back to ambient when system is OFF
         this.suctionPressure += (150 - this.suctionPressure) * 0.05;
         this.dischargePressure += (150 - this.dischargePressure) * 0.05;
@@ -111,6 +122,9 @@
         this.deltaT += (0 - this.deltaT) * 0.05;
         return currentTemp;
       }
+
+      this.crankcaseHeaterActive = false;
+      this.prevRunningState = true;
 
       // Dynamic oscillation to look like real live telemetry
       const noise = Math.sin(this.tickCount * 0.05);
@@ -343,7 +357,9 @@
         subcooling: Number(this.ac.subcooling.toFixed(1)),
         evap_temp: Number(this.ac.evaporatorTemp.toFixed(1)),
         cond_temp: Number(this.ac.condenserTemp.toFixed(1)),
-        delta_t: Number(this.ac.deltaT.toFixed(1))
+        delta_t: Number(this.ac.deltaT.toFixed(1)),
+        crankcase_heater: this.ac.crankcaseHeaterActive,
+        heater_cycles: this.ac.heaterCycles
       };
     }
   }
@@ -699,7 +715,8 @@
     let frame = 0;
 
     let npcs = [
-      new NPC('NPC-001', 'Agent Clog-001', 220, H - 120 - 44, 'BAS Guild', 'NPC-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.')
+      new NPC('NPC-001', 'Agent Clog-001', 220, H - 120 - 44, 'BAS Guild', 'NPC-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.'),
+      new NPC('NPC-002', 'Agent Clog-002', 380, H - 120 - 44, 'Refrigeration Scholars', 'AI-002 establishes the process where to avoid liquid slugback hazards occurs by tracking the crankcase heater activation cycle.')
     ];
 
     // Key handlers

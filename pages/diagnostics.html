@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AI-001 Diagnostics Console</title>
+  <title>AI Prompt Vector Diagnostics Console</title>
   <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -39,7 +39,7 @@
         inset 0 0 80px rgba(0,0,0,0.9),
         0 10px 40px rgba(0,0,0,0.8),
         0 0 100px rgba(57, 255, 20, 0.1);
-      width: 900px;
+      width: 920px;
       height: 900px;
       padding: 20px;
       position: relative;
@@ -61,7 +61,7 @@
       box-shadow: inset 0 0 100px rgba(0,0,0,0.95);
     }
 
-    /* CRT Scanline & Curved Screen Overlay Effect */
+    /* CRT Scanline Overlay */
     .screen-bezel::before {
       content: " ";
       display: block;
@@ -79,7 +79,7 @@
       display: block;
       position: absolute;
       top: 0; left: 0; bottom: 0; right: 0;
-      background: rgba(18, 16, 16, 0.1);
+      background: rgba(18, 16, 16, 0.15);
       opacity: 0;
       z-index: 11;
       pointer-events: none;
@@ -118,20 +118,34 @@
       letter-spacing: 2px;
     }
 
-    .status-capsules {
+    /* Navigation Tabs */
+    .vector-tabs {
       display: flex;
       gap: 12px;
     }
 
-    .capsule {
-      border: 1.5px solid var(--terminal-green);
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-size: 0.75rem;
+    .tab-btn {
+      background: transparent;
+      border: 2px solid var(--terminal-green);
+      color: var(--terminal-green);
+      padding: 6px 16px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.9rem;
       font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      text-shadow: 0 0 5px var(--terminal-green);
+      transition: all 0.2s ease;
     }
 
-    /* Main Console Grid split */
+    .tab-btn:hover, .tab-btn.active {
+      background: var(--terminal-green);
+      color: var(--terminal-bg);
+      box-shadow: 0 0 15px var(--terminal-green);
+      text-shadow: none;
+    }
+
+    /* Main Console Grid */
     .main-grid {
       display: grid;
       grid-template-columns: 1.3fr 1fr;
@@ -146,10 +160,13 @@
       padding: 24px;
       background: rgba(57, 255, 20, 0.03);
       position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .section-title {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       border-bottom: 1.5px dashed var(--terminal-green);
       padding-bottom: 8px;
       margin-bottom: 16px;
@@ -171,8 +188,9 @@
     .telemetry-box {
       border: 1.5px solid var(--terminal-green);
       padding: 16px;
-      margin-top: 24px;
+      margin-top: 16px;
       border-radius: 8px;
+      background: rgba(0, 0, 0, 0.4);
     }
 
     .telemetry-row {
@@ -217,11 +235,7 @@
       stroke-linecap: round;
       stroke-dasharray: 400;
       stroke-dashoffset: 400;
-      animation: fillGauge 2.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
-    }
-
-    @keyframes fillGauge {
-      to { stroke-dashoffset: 160; }
+      transition: stroke-dashoffset 1s ease-in-out;
     }
 
     /* Animated Needle */
@@ -235,11 +249,7 @@
       transform-origin: bottom center;
       box-shadow: 0 0 10px var(--terminal-green);
       transform: rotate(-75deg);
-      animation: swingNeedle 2.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
-    }
-
-    @keyframes swingNeedle {
-      to { transform: rotate(50deg); }
+      transition: transform 1s ease-in-out;
     }
 
     .needle-cap {
@@ -257,7 +267,9 @@
     .gauge-label {
       font-size: 0.85rem;
       margin-top: 15px;
-      text-align: center;
+      width: 80%;
+      display: flex;
+      justify-content: space-between;
     }
 
     .status-badge-glow {
@@ -327,81 +339,87 @@
         
         <!-- Header status bars -->
         <div class="header-bar">
-          <div class="header-title">AI-001 PROMPT DIAGNOSTIC</div>
-          <div class="status-capsules">
-            <span class="capsule">SYNC</span>
-            <span class="capsule">VALID</span>
-            <span class="capsule" style="background-color: var(--terminal-green); color: var(--terminal-bg);">OK</span>
+          <div class="header-title">AI PROMPT DIAGNOSTIC TERMINAL</div>
+          <div class="vector-tabs">
+            <button class="tab-btn active" onclick="loadVector('AI-001')">AI-001</button>
+            <button class="tab-btn" onclick="loadVector('AI-002')">AI-002</button>
           </div>
         </div>
 
         <div class="main-grid">
           <!-- Verification logs card -->
           <div class="validation-card">
-            <div class="section-title">AI-001 VALIDATION [OK]</div>
-            
-            <div class="log-line">:: PMPT VEC: <span class="log-val">SPARKS_EMITTER_VECTOR_CALIBRATION</span></div>
-            
-            <div class="log-line" style="margin-top: 20px; line-height: 1.6;">
-              :: <span class="log-val">AI-001 verifies that sparks particle emitter vectors are calibrated to animate sweeping dial pointer sweeps.</span>
+            <div>
+              <div class="section-title" id="val-title">AI-001 VALIDATION [OK]</div>
+              
+              <div class="log-line">:: PMPT VEC: <span class="log-val" id="pmpt-vec">SPARKS_EMITTER_VECTOR_CALIBRATION</span></div>
+              
+              <div class="log-line" style="margin-top: 16px; line-height: 1.6;">
+                :: <span class="log-val" id="vec-description">AI-001 verifies that sparks particle emitter vectors are calibrated to animate sweeping dial pointer sweeps.</span>
+              </div>
+
+              <div class="log-line" style="margin-top: 16px;">:: STATUS: <span class="log-val" id="vec-status" style="color: #ffffff; background: rgba(57,255,20,0.2); padding: 2px 6px; border-radius: 3px;">SUCCESS</span></div>
+
+              <div id="dynamic-fields">
+                <div class="log-line" style="margin-top: 20px;">:: VEC_XY_ARC: <span class="log-val">[45.8°, 178.4°]</span></div>
+                <div class="log-line">:: ANIMATION_CURVE: <span class="log-val">L_EASE_OUT</span></div>
+                <div class="log-line">:: SYNC: <span class="log-val">99.7%</span></div>
+              </div>
+
+              <div class="log-line">:: LOG_TS: <span class="log-val" id="current-timestamp">2026-07-05 04:23:36</span></div>
             </div>
 
-            <div class="log-line" style="margin-top: 20px;">:: STATUS: <span class="log-val" style="color: #ffffff; background: rgba(57,255,20,0.2); padding: 2px 6px; border-radius: 3px;">SUCCESS</span></div>
+            <div>
+              <div class="log-line" style="border-top: 1.5px dashed var(--terminal-dim); padding-top: 12px; margin-bottom: 0;">
+                :: CALIBRATION COMPLETE.
+              </div>
 
-            <div class="log-line" style="margin-top: 24px;">:: VEC_XY_ARC: <span class="log-val">[45.8°, 178.4°]</span></div>
-            <div class="log-line">:: ANIMATION_CURVE: <span class="log-val">L_EASE_OUT</span></div>
-            <div class="log-line">:: SYNC: <span class="log-val">99.7%</span></div>
-            <div class="log-line">:: LOG_TS: <span class="log-val" id="current-timestamp">2026-07-05 03:54:14</span></div>
-            
-            <div class="log-line" style="margin-top: 24px; border-top: 1.5px dashed var(--terminal-dim); padding-top: 16px;">
-              :: CALIBRATION COMPLETE.
-            </div>
-
-            <!-- Nested system telemetry info -->
-            <div class="telemetry-box">
-              <div class="telemetry-row">
-                <span>TEMP:</span>
-                <span class="log-val">43.7°C (NOM)</span>
-              </div>
-              <div class="telemetry-row">
-                <span>LOAD:</span>
-                <span class="log-val">78.4% (ACT)</span>
-              </div>
-              <div class="telemetry-row">
-                <span>MEM:</span>
-                <span class="log-val">14.3GB (OK)</span>
-              </div>
-              <div class="telemetry-row">
-                <span>CYCLES:</span>
-                <span class="log-val">1,942,001 (ACT)</span>
-              </div>
-              <div class="telemetry-row" style="margin-top: 8px; font-weight: bold;">
-                <span>AI CORE:</span>
-                <span class="log-val" style="color: var(--terminal-green);">ONLINE / RUNNING</span>
+              <!-- Nested system telemetry info -->
+              <div class="telemetry-box">
+                <div class="telemetry-row">
+                  <span>TEMP:</span>
+                  <span class="log-val" id="tel-temp">43.7°C (NOM)</span>
+                </div>
+                <div class="telemetry-row">
+                  <span>LOAD:</span>
+                  <span class="log-val" id="tel-load">78.4% (ACT)</span>
+                </div>
+                <div class="telemetry-row">
+                  <span>MEM:</span>
+                  <span class="log-val" id="tel-mem">14.3GB (OK)</span>
+                </div>
+                <div class="telemetry-row">
+                  <span>CYCLES:</span>
+                  <span class="log-val" id="tel-cycles">1,942,001 (ACT)</span>
+                </div>
+                <div class="telemetry-row" style="margin-top: 8px; font-weight: bold;">
+                  <span>AI CORE:</span>
+                  <span class="log-val" style="color: var(--terminal-green);">ONLINE / RUNNING</span>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Sweeping dial gauge card -->
           <div class="gauge-panel">
-            <div class="section-title" style="width: 100%; text-align: center;">SPARKS EMITTER VECTOR</div>
+            <div class="section-title" style="width: 100%; text-align: center;" id="gauge-title">SPARKS EMITTER VECTOR</div>
             
             <div class="gauge-wrapper">
               <svg width="220" height="220" viewBox="0 0 200 200">
                 <path class="gauge-arc" d="M 30,160 A 85,85 0 1,1 170,160" />
-                <path class="gauge-fill" d="M 30,160 A 85,85 0 1,1 170,160" />
+                <path class="gauge-fill" id="gauge-fill-arc" d="M 30,160 A 85,85 0 1,1 170,160" />
               </svg>
               <!-- Animated Needle pointer -->
-              <div class="needle"></div>
+              <div class="needle" id="gauge-needle"></div>
               <div class="needle-cap"></div>
             </div>
             
             <div class="gauge-label">
-              <span>0°</span>
-              <span style="float: right;">90°</span>
+              <span>MIN</span>
+              <span>MAX</span>
             </div>
 
-            <div class="status-badge-glow">CALIBRATED</div>
+            <div class="status-badge-glow" id="status-glow">CALIBRATED</div>
           </div>
         </div>
 
@@ -426,9 +444,83 @@
   </div>
 
   <script>
-    // Update timestamp dynamically
+    // Prompt Vector data repository
+    const vectors = {
+      'AI-001': {
+        valTitle: 'AI-001 VALIDATION [OK]',
+        pmptVec: 'SPARKS_EMITTER_VECTOR_CALIBRATION',
+        description: 'AI-001 verifies that sparks particle emitter vectors are calibrated to animate sweeping dial pointer sweeps.',
+        status: 'SUCCESS',
+        needleAngle: '38deg',
+        dashOffset: '240',
+        gaugeTitle: 'SPARKS EMITTER VECTOR',
+        dynamicHtml: `
+          <div class="log-line" style="margin-top: 20px;">:: VEC_XY_ARC: <span class="log-val">[45.8°, 178.4°]</span></div>
+          <div class="log-line">:: ANIMATION_CURVE: <span class="log-val">L_EASE_OUT</span></div>
+          <div class="log-line">:: SYNC: <span class="log-val">99.7%</span></div>
+        `,
+        temp: '43.7°C (NOM)',
+        load: '78.4% (ACT)',
+        cycles: '1,942,001 (ACT)',
+        glowText: 'CALIBRATED'
+      },
+      'AI-002': {
+        valTitle: 'AI-002 VALIDATION [OK]',
+        pmptVec: 'LIQUID_SLUGBACK_PREVENTION',
+        description: 'AI-002 establishes the process where to avoid liquid slugback hazards occurs by tracking the crankcase heater activation cycle.',
+        status: 'SUCCESS',
+        needleAngle: '62deg',
+        dashOffset: '140',
+        gaugeTitle: 'HEATER ACTIVE LOAD',
+        dynamicHtml: `
+          <div class="log-line" style="margin-top: 20px;">:: HEATER_CURRENT: <span class="log-val">1.2A (NOMINAL)</span></div>
+          <div class="log-line">:: COMPRESSOR_STATE: <span class="log-val">STANDBY / OFF</span></div>
+          <div class="log-line">:: CRANKCASE_TEMP: <span class="log-val">104.5°F (NOM)</span></div>
+        `,
+        temp: '38.2°C (STABLE)',
+        load: '12.5% (LOW)',
+        cycles: '482,109 (ACT)',
+        glowText: 'ACTIVE / SAFE'
+      }
+    };
+
+    function loadVector(id) {
+      const data = vectors[id];
+      if (!data) return;
+
+      // Update active tab styling
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.innerText === id) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      // Update screen text content
+      document.getElementById('val-title').innerText = data.valTitle;
+      document.getElementById('pmpt-vec').innerText = data.pmptVec;
+      document.getElementById('vec-description').innerText = data.description;
+      document.getElementById('vec-status').innerText = data.status;
+      document.getElementById('dynamic-fields').innerHTML = data.dynamicHtml;
+      document.getElementById('gauge-title').innerText = data.gaugeTitle;
+      document.getElementById('status-glow').innerText = data.glowText;
+
+      // Update telemetry readings
+      document.getElementById('tel-temp').innerText = data.temp;
+      document.getElementById('tel-load').innerText = data.load;
+      document.getElementById('tel-cycles').innerText = data.cycles;
+
+      // Animate needle and gauge fill
+      document.getElementById('gauge-needle').style.transform = `rotate(${data.needleAngle})`;
+      document.getElementById('gauge-fill-arc').style.strokeDashoffset = data.dashOffset;
+    }
+
+    // Set initial timestamp and load AI-001
     const now = new Date();
     document.getElementById('current-timestamp').innerText = now.toISOString().replace('T', ' ').substring(0, 19);
+    
+    // Initial load animations trigger
+    setTimeout(() => {
+      loadVector('AI-001');
+    }, 100);
   </script>
 </body>
 </html>

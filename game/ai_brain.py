@@ -66,7 +66,8 @@ class RobotBrain:
         
         # --- Prompt Vectors Tracker ---
         self.prompt_vectors = {
-            "AI-001": AIPromptVector("AI-001", "AI-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.")
+            "AI-001": AIPromptVector("AI-001", "AI-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps."),
+            "AI-002": AIPromptVector("AI-002", "AI-002 establishes the process where to avoid liquid slugback hazards occurs by tracking the crankcase heater activation cycle.")
         }
         
         # --- Initialize the API client ---

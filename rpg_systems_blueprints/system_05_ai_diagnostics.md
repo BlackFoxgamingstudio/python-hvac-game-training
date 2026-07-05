@@ -72,6 +72,14 @@ Below is the verified diagnostic interface calibration showing prompt vector ver
 
 ---
 
+## 🖼️ Visual Calibration Snapshot (AI-002)
+
+Below is the verified diagnostic interface calibration showing prompt vector verification for the crankcase heater activation cycle:
+
+![AI-002 Prompt Vector Calibration](../static/images/snapshots/ai_002_screenshot.jpg)
+
+---
+
 ## 📝 Diagnostic Persona Instructions
 
 ### 1. Tone and Structural Constraints
