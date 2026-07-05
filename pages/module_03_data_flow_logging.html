@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" data-module="3">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 3 — Data Flow & Diagnostic Logging | Python Systems Thinking</title>
+  <meta name="description" content="Learn Python file I/O, CSV writing, and context managers by building HVAC telemetry logging — just like a BAS trend log.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <a href="index.html" class="nav-title">Python Systems Thinking</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link">Module 1</a>
+      <a href="module_02_hvac_functions.html" class="nav-link">Module 2</a>
+      <a href="module_03_data_flow_logging.html" class="nav-link active">Module 3</a>
+      <a href="module_04_oop_refactor.html" class="nav-link">Module 4</a>
+      <a href="module_05_api_ai_integration.html" class="nav-link">Module 5</a>
+      <a href="module_06_diagnostic_troubleshooting.html" class="nav-link">Module 6</a>
+      <a href="module_07_game_programming.html" class="nav-link">Module 7</a>
+      <a href="module_08_final_project.html" class="nav-link">Module 8</a>
+    </div>
+  </nav>
+
+  <header class="module-hero">
+    <div class="hero-content">
+      <div class="hero-badge">Module 3 of 8</div>
+      <h1>Data Flow & Diagnostic Logging</h1>
+      <p class="hero-subtitle">CSV Telemetry</p>
+      <p class="hero-description">
+        Every Building Automation System (BAS) logs trend data — temperature readings, pressure
+        values, equipment status — timestamped and stored for analysis. In Python, we do the
+        exact same thing using the <strong>csv module</strong> and <strong>file I/O</strong>.
+        In this module, you'll record every cycle of your AC simulation to a CSV file, then
+        read it back for analysis.
+      </p>
+    </div>
+  </header>
+
+  <main class="module-content">
+
+    <!-- ── BAS Analogy ── -->
+    <section class="glass-card" id="bas-analogy">
+      <h2>🏢 3.1 — The BAS/BMS Trend Log Analogy</h2>
+      <p>
+        If you've ever worked with a Tridium Niagara, Honeywell, or Johnson Controls BAS,
+        you've seen trend logs. They look something like this:
+      </p>
+      <table class="concept-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Point Name</th>
+            <th>Value</th>
+            <th>Unit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>2025-01-15 08:00:01</td><td>RTU-01.SAT</td><td>55.2</td><td>°F</td><td>Normal</td></tr>
+          <tr><td>2025-01-15 08:00:01</td><td>RTU-01.RAT</td><td>72.8</td><td>°F</td><td>Normal</td></tr>
+          <tr><td>2025-01-15 08:00:01</td><td>RTU-01.DischPSI</td><td>408</td><td>PSI</td><td>Normal</td></tr>
+          <tr><td>2025-01-15 08:00:01</td><td>RTU-01.SuctPSI</td><td>68</td><td>PSI</td><td>Normal</td></tr>
+          <tr><td>2025-01-15 08:05:01</td><td>RTU-01.SAT</td><td>54.9</td><td>°F</td><td>Normal</td></tr>
+        </tbody>
+      </table>
+      <p>
+        This is exactly what a CSV (Comma-Separated Values) file looks like — rows and columns
+        of data, separated by commas. Python's built-in <code>csv</code> module makes it easy
+        to create, write, and read these files.
+      </p>
+    </section>
+
+    <!-- ── File I/O Basics ── -->
+    <section class="glass-card" id="file-io">
+      <h2>📁 3.2 — File I/O: Reading and Writing Files</h2>
+      <p>
+        Before we get to CSV, let's understand the basics of opening and writing files in Python.
+        The key concept is the <strong>context manager</strong> — the <code>with</code> statement:
+      </p>
+      <pre><code class="language-python"># ═══ Basic File Writing ═══
+
+# The 'with' statement opens a file and GUARANTEES it gets closed
+# Even if an error occurs, the file will be properly closed
+# Think of it like a safety switch — it always resets
+
+with open("sensor_log.txt", "w") as file:
+    # "w" = write mode (creates new file or overwrites existing)
+    file.write("HVAC Sensor Log\n")
+    file.write("===============\n")
+    file.write("Supply Air Temp: 55.2°F\n")
+    file.write("Return Air Temp: 72.8°F\n")
+    file.write("Status: Normal\n")
+
+# When we exit the 'with' block, the file is automatically closed
+# This is critical — unclosed files can lose data or lock resources
+print("✅ Log file written successfully!")</code></pre>
+
+      <h3>Why <code>with</code> Matters — The Context Manager</h3>
+      <p>
+        Think of the <code>with</code> statement like a lockout/tagout procedure. When you open
+        a panel to work on electrical, you lock it out so nobody else can energize it while
+        you're inside. When you're done, you remove the lock. The <code>with</code> statement does
+        this automatically for files:
+      </p>
+      <ul>
+        <li><strong>Opens</strong> the file (like opening the panel)</li>
+        <li><strong>Gives you access</strong> to read/write (like doing your work inside)</li>
+        <li><strong>Automatically closes</strong> when you're done — even if an error occurs (like removing your lock)</li>
+      </ul>
+
+      <pre><code class="language-python"># ═══ File Modes ═══
+# "w"  — Write mode: creates new file, overwrites if exists
+# "r"  — Read mode: reads existing file (error if doesn't exist)
+# "a"  — Append mode: adds to end of file (creates if doesn't exist)
+
+# Appending is like adding new trend data to an existing log
+with open("sensor_log.txt", "a") as file:
+    file.write("\n--- New Readings ---\n")
+    file.write("Supply Air Temp: 54.8°F\n")
+    file.write("Return Air Temp: 72.1°F\n")
+
+# Reading the file back
+with open("sensor_log.txt", "r") as file:
+    contents = file.read()
+    print(contents)</code></pre>
+    </section>
+
+    <!-- ── CSV Writing ── -->
+    <section class="glass-card" id="csv-writing">
+      <h2>📊 3.3 — Writing CSV Files: Your Digital Trend Log</h2>
+      <p>
+        Now let's use Python's <code>csv</code> module to write structured data with proper
+        headers and rows — exactly like a BAS exports trend data:
+      </p>
+      <pre><code class="language-python">import csv
+from datetime import datetime
+
+# ═══ Creating a CSV Trend Log ═══
+
+# Define the headers (column names)
+headers = [
+    "timestamp",
+    "cycle",
+    "room_temp_f",
+    "supply_air_f",
+    "return_air_f",
+    "discharge_psi",
+    "suction_psi",
+    "refrigerant_state",
+    "system_status"
+]
+
+# Open the CSV file for writing
+with open("hvac_trend_log.csv", "w", newline="") as csvfile:
+    writer = csv.writer(csvfile)
+
+    # Write the header row first
+    writer.writerow(headers)
+
+    # Write some sample data rows
+    writer.writerow([
+        datetime.now().isoformat(),
+        1, 82.0, 55.2, 72.8, 412, 68, "gas", "COOLING"
+    ])
+    writer.writerow([
+        datetime.now().isoformat(),
+        2, 80.0, 54.9, 72.1, 408, 67, "gas", "COOLING"
+    ])
+    writer.writerow([
+        datetime.now().isoformat(),
+        3, 78.0, 55.0, 71.5, 410, 68, "gas", "COOLING"
+    ])
+
+print("✅ CSV trend log created: hvac_trend_log.csv")</code></pre>
+
+      <h3>Using DictWriter for Named Columns</h3>
+      <p>
+        <code>csv.DictWriter</code> lets you write rows as dictionaries — matching column names
+        to values. This is cleaner and less error-prone than positional writing:
+      </p>
+      <pre><code class="language-python">import csv
+from datetime import datetime
+
+headers = [
+    "timestamp", "cycle", "room_temp_f", "supply_air_f",
+    "discharge_psi", "suction_psi", "system_status"
+]
+
+with open("hvac_trend_log.csv", "w", newline="") as csvfile:
+    writer = csv.DictWriter(csvfile, fieldnames=headers)
+
+    # Write header row
+    writer.writeheader()
+
+    # Write rows as dictionaries — much more readable!
+    writer.writerow({
+        "timestamp": datetime.now().isoformat(),
+        "cycle": 1,
+        "room_temp_f": 82.0,
+        "supply_air_f": 55.2,
+        "discharge_psi": 412,
+        "suction_psi": 68,
+        "system_status": "COOLING_STAGE_1"
+    })
+
+    writer.writerow({
+        "timestamp": datetime.now().isoformat(),
+        "cycle": 2,
+        "room_temp_f": 80.0,
+        "supply_air_f": 54.9,
+        "discharge_psi": 408,
+        "suction_psi": 67,
+        "system_status": "COOLING_STAGE_1"
+    })</code></pre>
+    </section>
+
+    <!-- ── Full Sim with Logging ── -->
+    <section class="glass-card" id="full-sim">
+      <h2>🔄 3.4 — Complete AC Simulation with CSV Logging</h2>
+      <p>
+        Now let's combine our Module 2 AC functions with CSV logging. Every cycle writes a row
+        to the trend log — just like a real BMS:
+      </p>
+      <pre><code class="language-python">import csv
+from datetime import datetime, timedelta
+
+def evaporator(refrigerant, room_temp):
+    """Evaporator absorbs heat from room air."""
+    new_ref = {
+        "temp": refrigerant["temp"] + 15.0,
+        "pressure": refrigerant["pressure"],
+        "state": "gas"
+    }
+    new_room = room_temp - 2.0
+    return new_ref, new_room
+
+def compressor(refrigerant):
+    """Compressor squeezes gas, raising temp and pressure."""
+    return {
+        "temp": refrigerant["temp"] + 80.0,
+        "pressure": int(refrigerant["pressure"] * 6),
+        "state": "gas"
+    }
+
+def condenser(refrigerant, outdoor_temp):
+    """Condenser rejects heat outdoors."""
+    return {
+        "temp": outdoor_temp + 10.0,
+        "pressure": refrigerant["pressure"],
+        "state": "liquid"
+    }
+
+def expansion_valve(refrigerant):
+    """Expansion valve drops pressure and temperature."""
+    return {
+        "temp": 40.0,
+        "pressure": int(refrigerant["pressure"] / 6),
+        "state": "liquid"
+    }
+
+# ═══ SIMULATION WITH CSV LOGGING ═══
+def run_simulation_with_logging(filename="hvac_telemetry.csv"):
+    """Run AC simulation and log every cycle to CSV."""
+
+    room_temp = 85.0
+    outdoor_temp = 95.0
+    setpoint = 72.0
+    refrigerant = {"temp": 40.0, "pressure": 68, "state": "liquid"}
+
+    headers = [
+        "timestamp", "cycle", "room_temp", "outdoor_temp",
+        "ref_temp", "ref_pressure", "ref_state",
+        "component", "system_status"
+    ]
+
+    sim_time = datetime(2025, 7, 15, 8, 0, 0)  # Simulated start time
+
+    with open(filename, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=headers)
+        writer.writeheader()
+
+        cycle = 0
+        while room_temp > setpoint and cycle < 15:
+            cycle += 1
+            sim_time += timedelta(minutes=5)  # 5-minute intervals
+
+            # Run all four components and log after each
+            refrigerant, room_temp = evaporator(refrigerant, room_temp)
+            writer.writerow({
+                "timestamp": sim_time.isoformat(),
+                "cycle": cycle, "room_temp": f"{room_temp:.1f}",
+                "outdoor_temp": outdoor_temp,
+                "ref_temp": f"{refrigerant['temp']:.1f}",
+                "ref_pressure": refrigerant["pressure"],
+                "ref_state": refrigerant["state"],
+                "component": "evaporator",
+                "system_status": "COOLING"
+            })
+
+            refrigerant = compressor(refrigerant)
+            writer.writerow({
+                "timestamp": sim_time.isoformat(),
+                "cycle": cycle, "room_temp": f"{room_temp:.1f}",
+                "outdoor_temp": outdoor_temp,
+                "ref_temp": f"{refrigerant['temp']:.1f}",
+                "ref_pressure": refrigerant["pressure"],
+                "ref_state": refrigerant["state"],
+                "component": "compressor",
+                "system_status": "COOLING"
+            })
+
+            refrigerant = condenser(refrigerant, outdoor_temp)
+            refrigerant = expansion_valve(refrigerant)
+
+            print(f"  Cycle {cycle:>2}: Room = {room_temp:.1f}°F")
+
+        status = "SATISFIED" if room_temp <= setpoint else "MAX_CYCLES"
+        print(f"\n✅ Simulation complete. {cycle} cycles logged to {filename}")
+        print(f"   Final room temp: {room_temp:.1f}°F | Status: {status}")
+
+run_simulation_with_logging()</code></pre>
+    </section>
+
+    <!-- ── Reading CSV Back ── -->
+    <section class="glass-card" id="csv-reading">
+      <h2>📖 3.5 — Reading CSV Back: Analyzing Your Trend Data</h2>
+      <p>
+        Now that we have logged data, let's read it back — just like pulling a trend report
+        from your BAS. Python's <code>csv.DictReader</code> reads each row as a dictionary:
+      </p>
+      <pre><code class="language-python">import csv
+
+# ═══ Reading the Trend Log ═══
+def analyze_trend_log(filename="hvac_telemetry.csv"):
+    """Read CSV trend data and produce a summary report."""
+
+    rows = []
+    with open(filename, "r") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            rows.append(row)
+
+    print(f"📊 TREND LOG ANALYSIS")
+    print(f"   File: {filename}")
+    print(f"   Total records: {len(rows)}")
+    print(f"   Time range: {rows[0]['timestamp']} → {rows[-1]['timestamp']}")
+    print()
+
+    # Extract room temperatures (convert from string to float)
+    room_temps = [float(row["room_temp"]) for row in rows]
+
+    print(f"   Room Temperature Summary:")
+    print(f"     Start:   {room_temps[0]:.1f}°F")
+    print(f"     End:     {room_temps[-1]:.1f}°F")
+    print(f"     Max:     {max(room_temps):.1f}°F")
+    print(f"     Min:     {min(room_temps):.1f}°F")
+    print(f"     Average: {sum(room_temps)/len(room_temps):.1f}°F")
+    print()
+
+    # Count records by component
+    components = {}
+    for row in rows:
+        comp = row["component"]
+        components[comp] = components.get(comp, 0) + 1
+
+    print(f"   Records by Component:")
+    for comp, count in components.items():
+        print(f"     {comp}: {count} records")
+
+analyze_trend_log()</code></pre>
+
+      <h3>List Comprehensions — Quick Data Extraction</h3>
+      <p>
+        That line <code>[float(row["room_temp"]) for row in rows]</code> is called a
+        <strong>list comprehension</strong>. It's a compact way to build a list by transforming
+        each item. Think of it as "for every row in my data, grab the room_temp and convert it to a number":
+      </p>
+      <pre><code class="language-python"># Long way (standard loop)
+room_temps = []
+for row in rows:
+    temp = float(row["room_temp"])
+    room_temps.append(temp)
+
+# Short way (list comprehension) — same result!
+room_temps = [float(row["room_temp"]) for row in rows]
+
+# You can even filter! Only get temps above 80°F:
+high_temps = [float(row["room_temp"]) for row in rows
+              if float(row["room_temp"]) > 80.0]</code></pre>
+    </section>
+
+    <!-- ── Key Takeaways ── -->
+    <section class="glass-card">
+      <h2>🎯 Module 3 Key Takeaways</h2>
+      <ul class="takeaway-list">
+        <li><strong>File I/O</strong> lets you persist data beyond program execution — your digital trend log.</li>
+        <li>The <strong><code>with</code> statement</strong> (context manager) guarantees files get closed properly — like lockout/tagout for data.</li>
+        <li><strong><code>csv.DictWriter</code></strong> writes structured data with column headers.</li>
+        <li><strong><code>csv.DictReader</code></strong> reads CSV files as dictionaries — easy column access by name.</li>
+        <li><strong>List comprehensions</strong> extract and transform data from lists quickly.</li>
+        <li>CSV trend logging is exactly how BAS/BMS systems store historical data for analysis.</li>
+      </ul>
+    </section>
+
+    <section class="glass-card cta-section">
+      <h2>Next Up: Module 4</h2>
+      <p>
+        Your functions work and your data logs. But right now, the AC functions and the robot
+        are separate loose pieces. In Module 4, we'll refactor everything into proper
+        <strong>classes</strong> — the AirConditioner object and the Robot object — using
+        Object-Oriented Programming.
+      </p>
+      <a href="module_04_oop_refactor.html" class="btn btn-primary btn-large">Continue to Module 4: OOP Refactor →</a>
+    </section>
+  </main>
+
+  <footer class="module-footer">
+    <div class="footer-nav">
+      <a href="module_02_hvac_functions.html" class="btn btn-nav btn-prev">← Module 2</a>
+      <span class="footer-module-indicator">Module 3 of 8</span>
+      <a href="module_04_oop_refactor.html" class="btn btn-nav btn-next">Module 4 →</a>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="../static/js/app.js"></script>
+</body>
+</html>

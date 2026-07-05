@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en" data-module="1">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 1 — Python Fundamentals | Python Systems Thinking</title>
+  <meta name="description" content="Learn Python fundamentals using HVAC examples: variables as sensor readings, conditionals as thermostats, loops as refrigeration cycles.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <!-- ═══════════════ TOP NAV ═══════════════ -->
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <a href="index.html" class="nav-title">Python Systems Thinking</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link active">Module 1</a>
+      <a href="module_02_hvac_functions.html" class="nav-link">Module 2</a>
+      <a href="module_03_data_flow_logging.html" class="nav-link">Module 3</a>
+      <a href="module_04_oop_refactor.html" class="nav-link">Module 4</a>
+      <a href="module_05_api_ai_integration.html" class="nav-link">Module 5</a>
+      <a href="module_06_diagnostic_troubleshooting.html" class="nav-link">Module 6</a>
+      <a href="module_07_game_programming.html" class="nav-link">Module 7</a>
+      <a href="module_08_final_project.html" class="nav-link">Module 8</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <header class="module-hero">
+    <div class="hero-content">
+      <div class="hero-badge">Module 1 of 8</div>
+      <h1>Python Fundamentals</h1>
+      <p class="hero-subtitle">The Language of Systems</p>
+      <p class="hero-description">
+        You read sensor values every day — 72°F supply air, 410 PSI discharge pressure,
+        65% relative humidity. In Python, those values live in <strong>variables</strong>.
+        Your thermostat logic? That's an <strong>if/elif/else</strong> statement. The refrigeration
+        cycle that runs over and over? That's a <strong>loop</strong>. Let's translate what you
+        already know into code.
+      </p>
+    </div>
+  </header>
+
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <main class="module-content">
+
+    <!-- ── Section 1: Variables & Types ── -->
+    <section class="glass-card" id="variables">
+      <h2>📐 1.1 — Variables: Your Digital Sensor Readings</h2>
+      <p>
+        In HVAC, you read values from sensors constantly. A supply air temperature sensor might
+        read 55°F. A suction pressure transducer shows 68 PSI. A humidity sensor reports 52%.
+        In Python, we store these values in <strong>variables</strong> — named containers that
+        hold data.
+      </p>
+      <p>
+        Think of a variable like a label on a piece of test equipment. The label tells you what
+        it measures, and the reading is the current value. Here's how you create variables in Python:
+      </p>
+      <pre><code class="language-python"># HVAC Sensor Readings as Python Variables
+# Each variable stores one piece of data from our system
+
+supply_air_temp = 55.0       # Float: temperature in °F (decimal number)
+return_air_temp = 72.0       # Float: what's coming back from the space
+discharge_pressure = 410     # Integer: PSI (whole number)
+suction_pressure = 68        # Integer: PSI
+relative_humidity = 52.5     # Float: percentage
+system_running = True        # Boolean: True or False (like a status light)
+unit_name = "RTU-01"         # String: text in quotes
+refrigerant_type = "R-410A"  # String: the refrigerant type</code></pre>
+
+      <h3>Python Data Types — The Four You Need</h3>
+      <p>
+        Every value in Python has a <strong>type</strong>. Just like how a temperature reading
+        is different from a part number, Python distinguishes between different kinds of data:
+      </p>
+      <table class="concept-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>What It Is</th>
+            <th>HVAC Example</th>
+            <th>Python Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>int</code></td>
+            <td>Whole number (no decimal)</td>
+            <td>Discharge pressure: 410 PSI</td>
+            <td><code>pressure = 410</code></td>
+          </tr>
+          <tr>
+            <td><code>float</code></td>
+            <td>Decimal number</td>
+            <td>Supply air temp: 55.3°F</td>
+            <td><code>temp = 55.3</code></td>
+          </tr>
+          <tr>
+            <td><code>str</code></td>
+            <td>Text (string of characters)</td>
+            <td>Unit name: "RTU-01"</td>
+            <td><code>name = "RTU-01"</code></td>
+          </tr>
+          <tr>
+            <td><code>bool</code></td>
+            <td>True or False</td>
+            <td>Compressor running? Yes</td>
+            <td><code>running = True</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        You can check what type a variable is using the <code>type()</code> function. This is
+        like looking at what kind of sensor you're reading — is it a thermocouple? A pressure
+        transducer? A status relay?
+      </p>
+      <pre><code class="language-python"># Check the type of each variable
+print(type(supply_air_temp))    # &lt;class 'float'&gt;
+print(type(discharge_pressure)) # &lt;class 'int'&gt;
+print(type(unit_name))          # &lt;class 'str'&gt;
+print(type(system_running))     # &lt;class 'bool'&gt;</code></pre>
+    </section>
+
+    <!-- ── Section 2: f-strings ── -->
+    <section class="glass-card" id="fstrings">
+      <h2>📟 1.2 — f-Strings: Sensor Readout Display</h2>
+      <p>
+        When you read a gauge, you don't just see "72" — you see "72°F Return Air Temperature."
+        Context matters. In Python, <strong>f-strings</strong> (formatted string literals) let you
+        embed variables inside text, creating readable sensor readouts.
+      </p>
+      <p>
+        An f-string starts with the letter <code>f</code> before the opening quote, and you put
+        variable names inside curly braces <code>{}</code>. Python replaces them with the actual values:
+      </p>
+      <pre><code class="language-python"># Sensor Readout Display Using f-strings
+supply_air_temp = 55.3
+return_air_temp = 72.0
+discharge_pressure = 412
+suction_pressure = 68
+unit_name = "RTU-01"
+
+# Basic readout
+print(f"Unit: {unit_name}")
+print(f"Supply Air: {supply_air_temp}°F")
+print(f"Return Air: {return_air_temp}°F")
+
+# Calculate and display delta-T (temperature difference)
+delta_t = return_air_temp - supply_air_temp
+print(f"Delta-T: {delta_t:.1f}°F")  # .1f = 1 decimal place
+
+# Full system status report
+print(f"""
+╔══════════════════════════════════════╗
+║  SYSTEM STATUS: {unit_name:>10}         ║
+╠══════════════════════════════════════╣
+║  Supply Air Temp:   {supply_air_temp:>6.1f}°F        ║
+║  Return Air Temp:   {return_air_temp:>6.1f}°F        ║
+║  Delta-T:           {delta_t:>6.1f}°F        ║
+║  Discharge PSI:     {discharge_pressure:>6}           ║
+║  Suction PSI:       {suction_pressure:>6}           ║
+╚══════════════════════════════════════╝
+""")</code></pre>
+      <p>
+        The <code>:.1f</code> format specifier means "show 1 decimal place." The <code>:>6</code>
+        means "right-align in a 6-character wide field." These formatting tricks help you build
+        clean, professional readouts — just like the display on a modern thermostat.
+      </p>
+    </section>
+
+    <!-- ── Section 3: Operators ── -->
+    <section class="glass-card" id="operators">
+      <h2>🔢 1.3 — Operators: HVAC Math in Python</h2>
+      <p>
+        HVAC work is full of calculations — CFM, BTU, tonnage, superheat, subcooling.
+        Python operators let you do all this math. Let's start with the most common
+        calculation every tech knows: Fahrenheit to Celsius conversion.
+      </p>
+      <pre><code class="language-python"># ═══ Temperature Conversion ═══
+# The formula: °C = (°F - 32) × 5/9
+
+supply_air_f = 55.0
+supply_air_c = (supply_air_f - 32) * 5 / 9
+
+print(f"Supply Air: {supply_air_f}°F = {supply_air_c:.1f}°C")
+# Output: Supply Air: 55.0°F = 12.8°C
+
+# ═══ Superheat Calculation ═══
+# Superheat = Actual Suction Line Temp - Saturated Suction Temp
+actual_suction_temp = 48.0   # °F — measured with thermometer
+saturated_suction_temp = 40.0 # °F — from PT chart at suction pressure
+
+superheat = actual_suction_temp - saturated_suction_temp
+print(f"Superheat: {superheat:.1f}°F")
+# Output: Superheat: 8.0°F
+
+# ═══ Subcooling Calculation ═══
+# Subcooling = Saturated Condensing Temp - Actual Liquid Line Temp
+saturated_condensing_temp = 120.0  # °F — from PT chart at discharge pressure
+actual_liquid_line_temp = 110.0    # °F — measured
+
+subcooling = saturated_condensing_temp - actual_liquid_line_temp
+print(f"Subcooling: {subcooling:.1f}°F")
+# Output: Subcooling: 10.0°F
+
+# ═══ Delta-T (Temperature Split) ═══
+return_air = 75.0
+supply_air = 55.0
+delta_t = return_air - supply_air
+print(f"Delta-T: {delta_t:.1f}°F (target: 15-22°F)")
+# Output: Delta-T: 20.0°F (target: 15-22°F)</code></pre>
+
+      <h3>Python's Arithmetic Operators</h3>
+      <table class="concept-table">
+        <thead>
+          <tr>
+            <th>Operator</th>
+            <th>Operation</th>
+            <th>HVAC Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>+</code></td><td>Addition</td><td>Total BTU from multiple zones</td></tr>
+          <tr><td><code>-</code></td><td>Subtraction</td><td>Delta-T = Return − Supply</td></tr>
+          <tr><td><code>*</code></td><td>Multiplication</td><td>BTU = CFM × 1.08 × ΔT</td></tr>
+          <tr><td><code>/</code></td><td>Division</td><td>Tons = BTU / 12,000</td></tr>
+          <tr><td><code>**</code></td><td>Exponent (power)</td><td>Area of circular duct (π × r²)</td></tr>
+          <tr><td><code>%</code></td><td>Modulo (remainder)</td><td>Cycle count (every Nth cycle)</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-python"># ═══ BTU & Tonnage Calculation ═══
+# Sensible BTU = 1.08 × CFM × ΔT
+cfm = 1200       # cubic feet per minute
+delta_t = 20.0   # degrees F
+
+sensible_btu = 1.08 * cfm * delta_t
+tons = sensible_btu / 12000
+
+print(f"Airflow: {cfm} CFM")
+print(f"Sensible Load: {sensible_btu:,.0f} BTU/hr")
+print(f"Tonnage: {tons:.1f} tons")
+# Output:
+# Airflow: 1200 CFM
+# Sensible Load: 25,920 BTU/hr
+# Tonnage: 2.2 tons</code></pre>
+    </section>
+
+    <!-- ── Section 4: Conditionals ── -->
+    <section class="glass-card" id="conditionals">
+      <h2>🌡️ 1.4 — Conditionals: The Thermostat Pattern</h2>
+      <p>
+        A thermostat is the most fundamental conditional in HVAC: <em>"If the temperature is
+        above the setpoint, turn on cooling. If it's below, turn on heating. Otherwise,
+        do nothing."</em> In Python, that exact logic looks like this:
+      </p>
+      <pre><code class="language-python"># ═══ Basic Thermostat Logic ═══
+room_temp = 76.0
+cooling_setpoint = 72.0
+heating_setpoint = 68.0
+
+if room_temp > cooling_setpoint:
+    print(f"🔵 COOLING ON — Room is {room_temp}°F (setpoint: {cooling_setpoint}°F)")
+    print(f"   Need to drop {room_temp - cooling_setpoint:.1f}°F")
+elif room_temp < heating_setpoint:
+    print(f"🔴 HEATING ON — Room is {room_temp}°F (setpoint: {heating_setpoint}°F)")
+    print(f"   Need to raise {heating_setpoint - room_temp:.1f}°F")
+else:
+    print(f"✅ DEADBAND — Room is {room_temp}°F (comfortable range)")
+    print(f"   System idle, no action needed")</code></pre>
+
+      <p>
+        Let's break down the syntax. The word <code>if</code> starts the check. The condition
+        (<code>room_temp > cooling_setpoint</code>) must be either True or False. If it's True,
+        the indented code underneath runs. If not, Python checks the <code>elif</code> (short
+        for "else if"). If nothing matches, the <code>else</code> block runs as a fallback.
+      </p>
+
+      <h3>Advanced: Multi-Stage Cooling with Fault Detection</h3>
+      <pre><code class="language-python"># ═══ Multi-Stage Cooling Controller ═══
+# Real commercial systems have multiple stages of cooling
+
+room_temp = 82.0
+setpoint = 72.0
+stage_1_threshold = 2.0   # 2°F above setpoint → Stage 1
+stage_2_threshold = 5.0   # 5°F above setpoint → Stage 2
+emergency_threshold = 15.0 # 15°F above → something is wrong
+
+deviation = room_temp - setpoint
+
+if deviation > emergency_threshold:
+    print(f"🚨 EMERGENCY — Room at {room_temp}°F!")
+    print(f"   {deviation:.1f}°F above setpoint — possible equipment failure")
+    print(f"   ACTION: Check compressor, check refrigerant charge")
+elif deviation > stage_2_threshold:
+    print(f"⚡ STAGE 2 COOLING — Room at {room_temp}°F")
+    print(f"   {deviation:.1f}°F above setpoint — both compressors running")
+elif deviation > stage_1_threshold:
+    print(f"🔵 STAGE 1 COOLING — Room at {room_temp}°F")
+    print(f"   {deviation:.1f}°F above setpoint — one compressor running")
+elif deviation > 0:
+    print(f"⏳ NEAR SETPOINT — Room at {room_temp}°F")
+    print(f"   {deviation:.1f}°F above — within deadband, monitoring")
+else:
+    print(f"✅ AT SETPOINT — Room at {room_temp}°F")
+    print(f"   System satisfied")</code></pre>
+
+      <h3>Comparison Operators</h3>
+      <p>Conditionals use these comparison operators to create True/False conditions:</p>
+      <table class="concept-table">
+        <thead>
+          <tr><th>Operator</th><th>Meaning</th><th>HVAC Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>></code></td><td>Greater than</td><td><code>temp > setpoint</code> → cooling needed</td></tr>
+          <tr><td><code><</code></td><td>Less than</td><td><code>temp < 32</code> → freeze protection!</td></tr>
+          <tr><td><code>>=</code></td><td>Greater or equal</td><td><code>pressure >= 500</code> → high pressure lockout</td></tr>
+          <tr><td><code><=</code></td><td>Less or equal</td><td><code>superheat <= 5</code> → flooding risk</td></tr>
+          <tr><td><code>==</code></td><td>Equal to</td><td><code>mode == "cooling"</code> → check mode</td></tr>
+          <tr><td><code>!=</code></td><td>Not equal to</td><td><code>status != "OK"</code> → fault present</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── Section 5: While Loops ── -->
+    <section class="glass-card" id="loops">
+      <h2>🔄 1.5 — While Loops: The Cooling Countdown</h2>
+      <p>
+        When your AC starts cooling a hot room, the temperature doesn't drop instantly. It
+        decreases cycle by cycle, degree by degree. In Python, a <strong>while loop</strong>
+        repeats code as long as a condition is True — just like your AC runs until the room
+        reaches setpoint.
+      </p>
+      <pre><code class="language-python"># ═══ Cooling Countdown Loop ═══
+# Simulate an AC cooling a room from 85°F down to the 72°F setpoint
+
+room_temp = 85.0
+setpoint = 72.0
+cooling_rate = 1.5    # degrees dropped per cycle
+cycle_count = 0
+
+print("🔵 AC SYSTEM STARTING...")
+print(f"   Room: {room_temp}°F → Target: {setpoint}°F")
+print(f"   Cooling rate: {cooling_rate}°F per cycle")
+print("-" * 40)
+
+while room_temp > setpoint:
+    cycle_count += 1  # same as: cycle_count = cycle_count + 1
+    room_temp -= cooling_rate  # same as: room_temp = room_temp - cooling_rate
+
+    # Don't overshoot the setpoint
+    if room_temp < setpoint:
+        room_temp = setpoint
+
+    print(f"   Cycle {cycle_count:>2}: Room temp = {room_temp:.1f}°F")
+
+print("-" * 40)
+print(f"✅ SETPOINT REACHED in {cycle_count} cycles!")
+print(f"   Final room temp: {room_temp}°F")</code></pre>
+      <p>Running this code produces:</p>
+      <pre><code class="language-python"># Output:
+# 🔵 AC SYSTEM STARTING...
+#    Room: 85.0°F → Target: 72.0°F
+#    Cooling rate: 1.5°F per cycle
+# ----------------------------------------
+#    Cycle  1: Room temp = 83.5°F
+#    Cycle  2: Room temp = 82.0°F
+#    Cycle  3: Room temp = 80.5°F
+#    Cycle  4: Room temp = 79.0°F
+#    Cycle  5: Room temp = 77.5°F
+#    Cycle  6: Room temp = 76.0°F
+#    Cycle  7: Room temp = 74.5°F
+#    Cycle  8: Room temp = 73.0°F
+#    Cycle  9: Room temp = 72.0°F
+# ----------------------------------------
+# ✅ SETPOINT REACHED in 9 cycles!
+#    Final room temp: 72.0°F</code></pre>
+
+      <h3>The Anatomy of a While Loop</h3>
+      <p>Let's break down what's happening line by line:</p>
+      <ol>
+        <li><code>while room_temp > setpoint:</code> — This is the <strong>condition</strong>. Python checks it before every cycle. If True, the indented block runs. If False, the loop ends.</li>
+        <li><code>cycle_count += 1</code> — The <strong>+=</strong> operator adds 1 to the counter. This is called <em>incrementing</em>.</li>
+        <li><code>room_temp -= cooling_rate</code> — The <strong>-=</strong> operator subtracts the cooling rate. Each cycle, the room gets cooler.</li>
+        <li>The <code>if room_temp &lt; setpoint</code> inside the loop prevents <em>overshooting</em> — we clamp to the setpoint, just like a real thermostat.</li>
+      </ol>
+
+      <h3>⚠️ Warning: Infinite Loops</h3>
+      <p>
+        If the condition never becomes False, the loop runs forever — like an AC that never
+        shuts off because the thermostat wire is shorted. Always make sure your loop has a way
+        to end. In our example, <code>room_temp</code> decreases each cycle, so eventually
+        <code>room_temp > setpoint</code> becomes False and the loop stops.
+      </p>
+
+      <pre><code class="language-python"># ═══ Advanced: Runtime Monitoring with While Loop ═══
+# Monitor a system and track min/max readings over time
+
+import random  # We'll use this to simulate sensor noise
+
+room_temp = 72.0
+setpoint = 72.0
+cycles = 0
+max_temp = room_temp
+min_temp = room_temp
+
+print("📊 RUNTIME MONITORING — Press Ctrl+C to stop")
+print("-" * 45)
+
+# Run for 20 simulated cycles
+while cycles < 20:
+    cycles += 1
+
+    # Simulate real-world temp fluctuation (+/- 2 degrees)
+    fluctuation = random.uniform(-2.0, 2.0)
+    room_temp = setpoint + fluctuation
+
+    # Track min/max
+    if room_temp > max_temp:
+        max_temp = room_temp
+    if room_temp < min_temp:
+        min_temp = room_temp
+
+    # Status indicator
+    if abs(room_temp - setpoint) > 1.5:
+        status = "⚠️ DRIFT"
+    else:
+        status = "✅ OK   "
+
+    print(f"   [{cycles:>3}] Temp: {room_temp:>5.1f}°F  {status}")
+
+print("-" * 45)
+print(f"📈 Summary: Min={min_temp:.1f}°F  Max={max_temp:.1f}°F  Range={max_temp-min_temp:.1f}°F")</code></pre>
+    </section>
+
+    <!-- ── Section 6: Putting It Together ── -->
+    <section class="glass-card" id="practice">
+      <h2>🛠️ 1.6 — Putting It All Together: Mini Thermostat Program</h2>
+      <p>
+        Let's combine everything from this module into one complete program. This simulates
+        a smart thermostat that reads a temperature, decides what to do, and logs the action:
+      </p>
+      <pre><code class="language-python"># ═══ MINI THERMOSTAT SIMULATOR ═══
+# Combines: variables, f-strings, operators, conditionals, loops
+
+# ── Configuration ──
+unit_name = "RTU-01"
+cooling_setpoint = 72.0
+heating_setpoint = 68.0
+deadband = 2.0
+room_temp = 85.0  # Starting temperature (hot day)
+cooling_rate = 1.8
+cycle = 0
+
+# ── Header ──
+print(f"""
+╔════════════════════════════════════════════╗
+║     THERMOSTAT SIMULATOR: {unit_name}          ║
+╠════════════════════════════════════════════╣
+║  Cooling SP: {cooling_setpoint:>5.1f}°F                       ║
+║  Heating SP: {heating_setpoint:>5.1f}°F                       ║
+║  Start Temp: {room_temp:>5.1f}°F                       ║
+╚════════════════════════════════════════════╝
+""")
+
+# ── Main Control Loop ──
+while room_temp > cooling_setpoint:
+    cycle += 1
+
+    # Determine mode
+    if room_temp > cooling_setpoint + 5:
+        mode = "STAGE 2"
+        rate = cooling_rate * 1.5  # Both compressors
+    elif room_temp > cooling_setpoint:
+        mode = "STAGE 1"
+        rate = cooling_rate
+    else:
+        mode = "IDLE"
+        rate = 0
+
+    # Apply cooling
+    room_temp -= rate
+    if room_temp < cooling_setpoint:
+        room_temp = cooling_setpoint
+
+    # Convert to Celsius for international readout
+    room_temp_c = (room_temp - 32) * 5 / 9
+
+    # Display
+    print(f"  Cycle {cycle:>2} | {room_temp:>5.1f}°F ({room_temp_c:>5.1f}°C) | Mode: {mode}")
+
+# ── Summary ──
+print(f"\n✅ Setpoint reached in {cycle} cycles.")
+print(f"   Final temp: {room_temp:.1f}°F / {(room_temp - 32) * 5/9:.1f}°C")
+print(f"   System mode: SATISFIED")</code></pre>
+    </section>
+
+    <!-- ── Key Takeaways ── -->
+    <section class="glass-card">
+      <h2>🎯 Module 1 Key Takeaways</h2>
+      <ul class="takeaway-list">
+        <li><strong>Variables</strong> store sensor data — temperatures, pressures, names, states.</li>
+        <li><strong>Types</strong> define what kind of data: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>.</li>
+        <li><strong>f-strings</strong> format your readouts: <code>f"Temp: {temp:.1f}°F"</code></li>
+        <li><strong>Operators</strong> do HVAC math: <code>+</code> <code>-</code> <code>*</code> <code>/</code></li>
+        <li><strong>Conditionals</strong> make decisions — exactly like thermostat logic.</li>
+        <li><strong>While loops</strong> repeat until a condition is met — like cooling until setpoint.</li>
+      </ul>
+    </section>
+
+    <!-- ── Next Module CTA ── -->
+    <section class="glass-card cta-section">
+      <h2>Next Up: Module 2</h2>
+      <p>
+        Now that you can write basic Python, let's map each AC component to a function.
+        The evaporator, compressor, condenser, and expansion valve each become a callable
+        piece of code that transforms data — just like they transform refrigerant.
+      </p>
+      <a href="module_02_hvac_functions.html" class="btn btn-primary btn-large">Continue to Module 2: HVAC as Functions →</a>
+    </section>
+  </main>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="module-footer">
+    <div class="footer-nav">
+      <a href="index.html" class="btn btn-nav btn-prev">← Home</a>
+      <span class="footer-module-indicator">Module 1 of 8</span>
+      <a href="module_02_hvac_functions.html" class="btn btn-nav btn-next">Module 2 →</a>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="../static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" data-module="5">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 5 — AI Integration | Python Systems Thinking</title>
+  <meta name="description" content="Connect your robot to Google's Gemini AI API. Build a RobotBrain class that reads telemetry and answers questions in natural language.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <a href="index.html" class="nav-title">Python Systems Thinking</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link">Module 1</a>
+      <a href="module_02_hvac_functions.html" class="nav-link">Module 2</a>
+      <a href="module_03_data_flow_logging.html" class="nav-link">Module 3</a>
+      <a href="module_04_oop_refactor.html" class="nav-link">Module 4</a>
+      <a href="module_05_api_ai_integration.html" class="nav-link active">Module 5</a>
+      <a href="module_06_diagnostic_troubleshooting.html" class="nav-link">Module 6</a>
+      <a href="module_07_game_programming.html" class="nav-link">Module 7</a>
+      <a href="module_08_final_project.html" class="nav-link">Module 8</a>
+    </div>
+  </nav>
+
+  <header class="module-hero">
+    <div class="hero-content">
+      <div class="hero-badge">Module 5 of 8</div>
+      <h1>AI Integration</h1>
+      <p class="hero-subtitle">Gemini API & Robot Brain</p>
+      <p class="hero-description">
+        Modern HVAC systems use analytics platforms and AI to monitor performance, predict
+        failures, and recommend maintenance. In this module, you'll give your robot a
+        <strong>brain</strong> powered by Google's Gemini AI — it reads live telemetry data
+        and answers questions about the robot's thermal state in natural language.
+      </p>
+    </div>
+  </header>
+
+  <main class="module-content">
+
+    <!-- ── What is an API? ── -->
+    <section class="glass-card" id="what-is-api">
+      <h2>🌐 5.1 — What Is an API?</h2>
+      <p>
+        An <strong>API</strong> (Application Programming Interface) is a way for two programs
+        to talk to each other. Think of it like a thermostat communicating with an RTU:
+      </p>
+      <ul>
+        <li>The thermostat (your program) sends a <strong>request</strong>: "What's the current temperature?"</li>
+        <li>The RTU (the API server) sends a <strong>response</strong>: "72.5°F"</li>
+        <li>They communicate using a <strong>protocol</strong> (BACnet in HVAC, HTTP for web APIs)</li>
+      </ul>
+      <p>
+        Google's Gemini API works the same way. Your Python program sends a text prompt to
+        Google's servers, and Gemini sends back an intelligent response. The "protocol" is HTTPS,
+        and the "language" is the Gemini SDK.
+      </p>
+
+      <h3>API Keys — Your Access Badge</h3>
+      <p>
+        Just like you need a keycard to access a building's mechanical room, you need an
+        <strong>API key</strong> to access the Gemini API. This key identifies you and controls
+        your access level.
+      </p>
+      <pre><code class="language-python"># ⚠️ NEVER put your API key directly in code!
+# Bad:  api_key = "AIzaSy..."  ← Anyone who sees your code gets your key
+
+# ✅ Use environment variables instead:
+# An environment variable is a value stored in your operating system,
+# not in your code. It's like keeping the master key in a lockbox,
+# not taped to the door.
+
+import os
+
+# This reads the API key from your system environment
+api_key = os.environ.get("GEMINI_API_KEY")
+
+if api_key:
+    print("✅ API key loaded successfully")
+else:
+    print("❌ No API key found!")
+    print("   Set it with: export GEMINI_API_KEY='your-key-here'")</code></pre>
+    </section>
+
+    <!-- ── Setup ── -->
+    <section class="glass-card" id="setup">
+      <h2>⚙️ 5.2 — Setting Up the Gemini SDK</h2>
+      <p>
+        Before writing code, you need to install the Google Generative AI package and
+        set your API key:
+      </p>
+      <pre><code class="language-python"># Step 1: Install the SDK (run in terminal, not in Python)
+# pip install google-generativeai
+
+# Step 2: Set your API key as an environment variable
+# On Mac/Linux (in your terminal):
+#   export GEMINI_API_KEY="your-api-key-here"
+#
+# On Windows (in Command Prompt):
+#   set GEMINI_API_KEY=your-api-key-here
+#
+# To get a free API key:
+#   1. Go to https://aistudio.google.com/apikey
+#   2. Click "Create API Key"
+#   3. Copy the key
+
+# Step 3: Test the connection
+import google.generativeai as genai
+import os
+
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel("gemini-pro")
+response = model.generate_content("Say 'HVAC system online!' in one sentence.")
+print(response.text)</code></pre>
+
+      <h3>Understanding the SDK Pattern</h3>
+      <p>
+        The SDK (Software Development Kit) handles all the complicated networking for you.
+        It's like using a handheld diagnostic tool to talk to an RTU controller — you don't
+        need to know the raw BACnet protocol, the tool handles it. Similarly, the Gemini SDK
+        handles HTTP requests, authentication, and response parsing.
+      </p>
+    </section>
+
+    <!-- ── RobotBrain Class ── -->
+    <section class="glass-card" id="robot-brain">
+      <h2>🧠 5.3 — The RobotBrain Class</h2>
+      <p>
+        Now let's build the intelligence layer. The <code>RobotBrain</code> class wraps the
+        Gemini API and gives it context about the robot's current state via
+        <strong>system instructions</strong> — a prompt that tells the AI who it is and what
+        data it has access to:
+      </p>
+      <pre><code class="language-python">import google.generativeai as genai
+import os
+from datetime import datetime
+
+class RobotBrain:
+    """
+    AI-powered brain for the Robot, using Google Gemini.
+
+    The brain receives live telemetry data from the robot's sensors
+    and AC system, then uses Gemini to reason about the data and
+    answer questions in natural language.
+    """
+
+    def __init__(self, robot_name):
+        """Initialize the brain with Gemini API connection."""
+        self.robot_name = robot_name
+        self.conversation_history = []
+
+        # Configure Gemini
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "❌ GEMINI_API_KEY not set! "
+                "Run: export GEMINI_API_KEY='your-key'"
+            )
+
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel("gemini-pro")
+
+        print(f"🧠 {robot_name} Brain initialized — Gemini connected")
+
+    def build_system_prompt(self, robot_telemetry, ac_telemetry):
+        """
+        Build a system instruction with live telemetry data.
+
+        This is like giving a technician the current readings before
+        asking them to diagnose an issue. The AI needs context.
+        """
+        prompt = f"""You are the AI brain of a robot named {self.robot_name}.
+You are an expert HVAC technician and robotics engineer.
+
+CURRENT TELEMETRY (live sensor data):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Timestamp: {datetime.now().isoformat()}
+
+ROBOT STATUS:
+  Position: ({robot_telemetry['x']}, {robot_telemetry['y']})
+  Internal Temperature: {robot_telemetry['internal_temp']:.1f}°F
+  Steps Taken: {robot_telemetry['steps_taken']}
+  Max Safe Temp: {robot_telemetry['max_temp']:.1f}°F
+
+AC SYSTEM ({ac_telemetry['unit_id']}):
+  Running: {ac_telemetry['running']}
+  Cycle Count: {ac_telemetry['cycle']}
+  Refrigerant Temp: {ac_telemetry['ref_temp']:.1f}°F
+  Refrigerant Pressure: {ac_telemetry['ref_pressure']} PSI
+  Refrigerant State: {ac_telemetry['ref_state']}
+
+OPERATING RULES:
+- Normal internal temp range: 68-78°F
+- Warning range: 78-90°F
+- Critical/overheating: above 90°F
+- Superheat target: 8-12°F
+- Subcooling target: 10-15°F
+
+Answer questions about your own status, diagnose issues, and
+recommend actions based on the live telemetry data above.
+Use HVAC terminology when appropriate. Be concise but thorough."""
+
+        return prompt
+
+    def think(self, question, robot_telemetry, ac_telemetry):
+        """
+        Ask the robot brain a question with live telemetry context.
+
+        Args:
+            question: The user's question
+            robot_telemetry: dict with robot sensor data
+            ac_telemetry: dict with AC system data
+
+        Returns:
+            str: The AI's response
+        """
+        system_prompt = self.build_system_prompt(
+            robot_telemetry, ac_telemetry
+        )
+
+        # Combine system prompt with user question
+        full_prompt = f"{system_prompt}\n\nUSER QUESTION: {question}"
+
+        try:
+            response = self.model.generate_content(full_prompt)
+            answer = response.text
+
+            # Log the conversation
+            self.conversation_history.append({
+                "timestamp": datetime.now().isoformat(),
+                "question": question,
+                "answer": answer
+            })
+
+            return answer
+
+        except Exception as e:
+            return f"❌ Brain error: {e}"</code></pre>
+    </section>
+
+    <!-- ── Interactive CLI ── -->
+    <section class="glass-card" id="interactive-cli">
+      <h2>💬 5.4 — Interactive CLI: Talk to Your Robot</h2>
+      <p>
+        Let's build a command-line interface where you can type questions and the robot
+        answers using live telemetry. This combines the Robot from Module 4 with the
+        RobotBrain:
+      </p>
+      <pre><code class="language-python"># ═══ INTERACTIVE ROBOT CLI ═══
+# Combines: Robot (Module 4) + RobotBrain (Module 5)
+
+def interactive_robot_session():
+    """Run an interactive session with the AI-powered robot."""
+
+    # Create the robot and its brain
+    bot = Robot("Atlas", x=0, y=0)
+    brain = RobotBrain("Atlas")
+
+    # Simulate some activity to generate interesting telemetry
+    bot.walk("right", 10)
+    bot.run("up", 5)
+    bot.run_climate_control()
+
+    print("\n" + "=" * 55)
+    print("  🤖 ROBOT ATLAS — Interactive AI Session")
+    print("  Type questions about the robot's status.")
+    print("  Commands: 'walk', 'run', 'cool', 'status', 'quit'")
+    print("=" * 55)
+
+    while True:
+        user_input = input("\n👤 You: ").strip()
+
+        if not user_input:
+            continue
+
+        if user_input.lower() == "quit":
+            print("👋 Session ended.")
+            break
+
+        # Handle action commands
+        if user_input.lower() == "status":
+            bot.status()
+            continue
+        elif user_input.lower().startswith("walk"):
+            bot.walk("right", 3)
+            continue
+        elif user_input.lower().startswith("run"):
+            bot.run("right", 5)
+            continue
+        elif user_input.lower() == "cool":
+            bot.run_climate_control()
+            continue
+
+        # For questions, use the AI brain
+        robot_telemetry = {
+            "x": bot.x,
+            "y": bot.y,
+            "internal_temp": bot.internal_temp,
+            "steps_taken": bot.steps_taken,
+            "max_temp": bot.max_temp
+        }
+        ac_telemetry = bot.ac.get_telemetry()
+
+        print("\n🧠 Atlas is thinking...")
+        answer = brain.think(user_input, robot_telemetry, ac_telemetry)
+        print(f"\n🤖 Atlas: {answer}")
+
+# Run the interactive session
+# interactive_robot_session()  # Uncomment to run!</code></pre>
+
+      <h3>Example Conversation</h3>
+      <p>Here's what a session might look like:</p>
+      <pre><code class="language-python"># 👤 You: What's your current temperature?
+# 🤖 Atlas: My internal temperature is currently 79.5°F, which is
+#    in the WARNING range (78-90°F). I've taken 23 steps and my
+#    AC system has run 2 cooling cycles. I recommend activating
+#    climate control to bring me back to the normal range.
+
+# 👤 You: Is my AC system working properly?
+# 🤖 Atlas: Based on the telemetry, my AC unit (Atlas-AC) is running
+#    with refrigerant at 40.0°F and 68 PSI in liquid state. This
+#    looks normal for an R-410A system at the evaporator. The unit
+#    has completed 2 cycles. Discharge pressure is within normal
+#    range. No faults detected.
+
+# 👤 You: What would happen if I ran 20 more steps?
+# 🤖 Atlas: Running generates approximately 0.5°F per step plus a
+#    2.0°F running bonus. Twenty running steps would add roughly
+#    12°F to my internal temperature, pushing me from 79.5°F to
+#    approximately 91.5°F — above the 90°F CRITICAL threshold.
+#    I strongly recommend running climate control before or during
+#    extended movement.</code></pre>
+    </section>
+
+    <!-- ── Prompt Engineering ── -->
+    <section class="glass-card" id="prompt-engineering">
+      <h2>📝 5.5 — Prompt Engineering: Talking to AI Effectively</h2>
+      <p>
+        The quality of the AI's response depends heavily on how you structure the prompt.
+        This is called <strong>prompt engineering</strong>. Here are the key principles we
+        used in the RobotBrain:
+      </p>
+      <table class="concept-table">
+        <thead>
+          <tr><th>Principle</th><th>What We Did</th><th>Why It Matters</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Role Assignment</strong></td>
+            <td>"You are the AI brain of a robot... expert HVAC technician"</td>
+            <td>Tells the AI what persona and expertise to use</td>
+          </tr>
+          <tr>
+            <td><strong>Context Data</strong></td>
+            <td>Live telemetry values embedded in the prompt</td>
+            <td>The AI can't read your sensors — you must provide the data</td>
+          </tr>
+          <tr>
+            <td><strong>Operating Rules</strong></td>
+            <td>Normal/warning/critical temp ranges defined</td>
+            <td>Gives the AI decision criteria for diagnosis</td>
+          </tr>
+          <tr>
+            <td><strong>Response Format</strong></td>
+            <td>"Be concise but thorough, use HVAC terminology"</td>
+            <td>Controls the style and length of responses</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre><code class="language-python"># ═══ Prompt Engineering Tips ═══
+
+# BAD prompt — too vague:
+bad_prompt = "Tell me about the robot."
+# AI doesn't know WHICH robot, what data it has, or what you want.
+
+# GOOD prompt — specific with context:
+good_prompt = """You are an HVAC diagnostic AI.
+
+Current readings from RTU-01:
+- Supply air: 55°F
+- Return air: 72°F
+- Discharge: 450 PSI (normal: 380-420)
+- Suction: 58 PSI (normal: 65-72)
+
+The discharge pressure is HIGH and suction is LOW.
+What is the most likely cause? Recommend diagnostic steps."""
+
+# The AI now has everything it needs to give a useful answer.</code></pre>
+    </section>
+
+    <!-- ── Key Takeaways ── -->
+    <section class="glass-card">
+      <h2>🎯 Module 5 Key Takeaways</h2>
+      <ul class="takeaway-list">
+        <li><strong>APIs</strong> let programs talk to each other — like a thermostat communicating with an RTU.</li>
+        <li><strong>API keys</strong> should NEVER be in your code — use environment variables (<code>os.environ</code>).</li>
+        <li>The <strong>Gemini SDK</strong> handles networking complexity — you just call <code>generate_content()</code>.</li>
+        <li><strong>System instructions</strong> give the AI context — role, data, rules, format.</li>
+        <li><strong>Prompt engineering</strong> is the skill of structuring prompts for better AI responses.</li>
+        <li><strong>Composition</strong> continues: Robot HAS-A Brain (RobotBrain), which HAS-A Gemini model.</li>
+      </ul>
+    </section>
+
+    <section class="glass-card cta-section">
+      <h2>Next Up: Module 6</h2>
+      <p>
+        Your robot can think, but what about diagnosing real faults? In Module 6, we'll read
+        historical CSV logs, detect anomalies like frozen coils and high head pressure,
+        and feed fault data to Gemini for AI-powered troubleshooting.
+      </p>
+      <a href="module_06_diagnostic_troubleshooting.html" class="btn btn-primary btn-large">Continue to Module 6: Diagnostic Troubleshooting →</a>
+    </section>
+  </main>
+
+  <footer class="module-footer">
+    <div class="footer-nav">
+      <a href="module_04_oop_refactor.html" class="btn btn-nav btn-prev">← Module 4</a>
+      <span class="footer-module-indicator">Module 5 of 8</span>
+      <a href="module_06_diagnostic_troubleshooting.html" class="btn btn-nav btn-next">Module 6 →</a>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="../static/js/app.js"></script>
+</body>
+</html>

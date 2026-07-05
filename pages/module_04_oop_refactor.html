@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en" data-module="4">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 4 — OOP Refactor | Python Systems Thinking</title>
+  <meta name="description" content="Refactor HVAC functions into classes using Object-Oriented Programming. Build an AirConditioner class and a Robot class using composition.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <a href="index.html" class="nav-title">Python Systems Thinking</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link">Module 1</a>
+      <a href="module_02_hvac_functions.html" class="nav-link">Module 2</a>
+      <a href="module_03_data_flow_logging.html" class="nav-link">Module 3</a>
+      <a href="module_04_oop_refactor.html" class="nav-link active">Module 4</a>
+      <a href="module_05_api_ai_integration.html" class="nav-link">Module 5</a>
+      <a href="module_06_diagnostic_troubleshooting.html" class="nav-link">Module 6</a>
+      <a href="module_07_game_programming.html" class="nav-link">Module 7</a>
+      <a href="module_08_final_project.html" class="nav-link">Module 8</a>
+    </div>
+  </nav>
+
+  <header class="module-hero">
+    <div class="hero-content">
+      <div class="hero-badge">Module 4 of 8</div>
+      <h1>OOP Refactor</h1>
+      <p class="hero-subtitle">Robot + AC Composition</p>
+      <p class="hero-description">
+        Right now, your AC functions float around independently — like loose parts on a workbench.
+        In the real world, those parts are assembled into a <strong>unit</strong> — an RTU, a split
+        system, a chiller. In Python, we assemble related data and functions into a
+        <strong>class</strong>. Then we compose bigger objects from smaller ones: a Robot that
+        <em>has</em> an AirConditioner.
+      </p>
+    </div>
+  </header>
+
+  <main class="module-content">
+
+    <!-- ── What is a Class? ── -->
+    <section class="glass-card" id="what-is-class">
+      <h2>🧱 4.1 — What Is a Class?</h2>
+      <p>
+        A <strong>class</strong> is a blueprint for creating objects. An <strong>object</strong>
+        is a specific instance of that blueprint. Think of it this way:
+      </p>
+      <table class="concept-table">
+        <thead>
+          <tr><th>HVAC World</th><th>Python World</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Equipment spec sheet (the design)</td><td>Class definition (the blueprint)</td></tr>
+          <tr><td>Actual unit on the roof: RTU-01</td><td>Object instance: <code>rtu_01 = AirConditioner()</code></td></tr>
+          <tr><td>Serial number, capacity, refrigerant charge</td><td>Attributes: <code>self.capacity</code>, <code>self.charge</code></td></tr>
+          <tr><td>Start cooling, run diagnostic, defrost</td><td>Methods: <code>.cool()</code>, <code>.diagnose()</code></td></tr>
+        </tbody>
+      </table>
+      <p>
+        The class bundles <strong>data</strong> (attributes) and <strong>behavior</strong> (methods)
+        into one unit. Instead of separate variables and functions, everything about an AC
+        lives inside the AirConditioner class.
+      </p>
+
+      <pre><code class="language-python"># ═══ Your First Class: A Simple Sensor ═══
+
+class TemperatureSensor:
+    """A temperature sensor — the simplest possible class."""
+
+    def __init__(self, name, location):
+        """
+        __init__ is the CONSTRUCTOR — it runs when you create an object.
+        'self' refers to the specific object being created.
+
+        Think of __init__ like the commissioning process — you set up
+        the sensor with its name, location, and initial reading.
+        """
+        self.name = name              # Attribute: sensor's name
+        self.location = location      # Attribute: where it's installed
+        self.reading = 0.0            # Attribute: current reading (starts at 0)
+        self.unit = "°F"              # Attribute: measurement unit
+
+    def take_reading(self, temperature):
+        """Method: take a new reading."""
+        self.reading = temperature
+        print(f"📡 {self.name} @ {self.location}: {self.reading}{self.unit}")
+
+    def get_status(self):
+        """Method: return a formatted status string."""
+        return f"{self.name}: {self.reading}{self.unit} ({self.location})"
+
+
+# Creating OBJECTS (instances) from the class blueprint
+supply_sensor = TemperatureSensor("SAT-01", "Supply Air Duct")
+return_sensor = TemperatureSensor("RAT-01", "Return Air Plenum")
+
+# Using methods on each object
+supply_sensor.take_reading(55.2)   # 📡 SAT-01 @ Supply Air Duct: 55.2°F
+return_sensor.take_reading(72.8)   # 📡 RAT-01 @ Return Air Plenum: 72.8°F
+
+# Each object has its OWN data
+print(supply_sensor.reading)  # 55.2
+print(return_sensor.reading)  # 72.8 — different object, different data!</code></pre>
+
+      <h3>Understanding <code>self</code></h3>
+      <p>
+        The word <code>self</code> is Python's way of saying "this specific object." When you
+        have two sensors — <code>supply_sensor</code> and <code>return_sensor</code> — they're
+        both made from the same blueprint, but <code>self</code> ensures each one tracks its
+        own data. Think of it like serial numbers: same model, different units.
+      </p>
+    </section>
+
+    <!-- ── AirConditioner Class ── -->
+    <section class="glass-card" id="ac-class">
+      <h2>❄️ 4.2 — The AirConditioner Class</h2>
+      <p>
+        Now let's refactor our Module 2 functions into a proper class. All four components
+        become methods, and the refrigerant state becomes an attribute:
+      </p>
+      <pre><code class="language-python">class AirConditioner:
+    """
+    A complete air conditioning system modeled as a Python class.
+
+    Encapsulates the refrigerant state and all four cycle components
+    as methods. The AC tracks its own internal state.
+    """
+
+    def __init__(self, unit_id, capacity_tons=3.0):
+        """Commission the AC unit with initial state."""
+        self.unit_id = unit_id
+        self.capacity_tons = capacity_tons
+        self.cycle_count = 0
+        self.is_running = False
+
+        # Internal refrigerant state
+        self.refrigerant = {
+            "temp": 40.0,
+            "pressure": 68,
+            "state": "liquid"
+        }
+
+        # Operational parameters
+        self.evaporator_superheat = 10.0
+        self.compression_ratio = 6.0
+        self.condenser_approach = 10.0
+
+        print(f"✅ {self.unit_id} commissioned: {self.capacity_tons}-ton unit")
+
+    def evaporator(self, room_temp):
+        """Absorb heat from room air. Returns new room temp."""
+        self.refrigerant["temp"] += 15.0
+        self.refrigerant["state"] = "gas"
+        new_room_temp = room_temp - 2.0
+        return new_room_temp
+
+    def compressor(self):
+        """Compress low-pressure gas into high-pressure gas."""
+        self.refrigerant["temp"] += 80.0
+        self.refrigerant["pressure"] = int(
+            self.refrigerant["pressure"] * self.compression_ratio
+        )
+        self.refrigerant["state"] = "gas"
+
+    def condenser(self, outdoor_temp):
+        """Reject heat to outdoor air, condensing gas to liquid."""
+        self.refrigerant["temp"] = outdoor_temp + self.condenser_approach
+        self.refrigerant["state"] = "liquid"
+
+    def expansion_valve(self):
+        """Drop pressure through orifice, cooling the refrigerant."""
+        self.refrigerant["temp"] = 40.0
+        self.refrigerant["pressure"] = int(
+            self.refrigerant["pressure"] / self.compression_ratio
+        )
+        self.refrigerant["state"] = "liquid"
+
+    def run_cycle(self, room_temp, outdoor_temp):
+        """
+        Execute one complete refrigeration cycle.
+        Returns the new room temperature.
+        """
+        self.cycle_count += 1
+        self.is_running = True
+
+        room_temp = self.evaporator(room_temp)
+        self.compressor()
+        self.condenser(outdoor_temp)
+        self.expansion_valve()
+
+        return room_temp
+
+    def get_telemetry(self):
+        """Return current system telemetry as a dictionary."""
+        return {
+            "unit_id": self.unit_id,
+            "cycle": self.cycle_count,
+            "running": self.is_running,
+            "ref_temp": self.refrigerant["temp"],
+            "ref_pressure": self.refrigerant["pressure"],
+            "ref_state": self.refrigerant["state"]
+        }
+
+    def __str__(self):
+        """Human-readable string representation."""
+        status = "RUNNING" if self.is_running else "OFF"
+        return (f"[{self.unit_id}] {self.capacity_tons}T | "
+                f"Status: {status} | Cycles: {self.cycle_count}")
+
+
+# ═══ Using the Class ═══
+ac = AirConditioner("RTU-01", capacity_tons=5.0)
+print(ac)  # [RTU-01] 5.0T | Status: OFF | Cycles: 0
+
+room = 82.0
+for i in range(5):
+    room = ac.run_cycle(room, outdoor_temp=95.0)
+    telemetry = ac.get_telemetry()
+    print(f"  Cycle {telemetry['cycle']}: Room = {room:.1f}°F")
+
+print(f"\n{ac}")  # [RTU-01] 5.0T | Status: RUNNING | Cycles: 5</code></pre>
+    </section>
+
+    <!-- ── Robot Class ── -->
+    <section class="glass-card" id="robot-class">
+      <h2>🤖 4.3 — The Robot Class</h2>
+      <p>
+        Our robot is a separate entity that moves, has a position, and contains an air
+        conditioning system. Let's build the Robot class:
+      </p>
+      <pre><code class="language-python">class Robot:
+    """
+    A robot with movement capabilities and an internal AC system.
+
+    The Robot doesn't inherit from AirConditioner — it CONTAINS one.
+    This is called COMPOSITION: Robot HAS-AN AirConditioner.
+    """
+
+    def __init__(self, name, x=0, y=0):
+        """Create a robot at position (x, y) with an internal AC."""
+        self.name = name
+        self.x = x
+        self.y = y
+        self.speed = 1
+        self.internal_temp = 72.0  # Robot's internal temperature
+        self.max_temp = 100.0      # Overheating threshold
+        self.steps_taken = 0
+
+        # COMPOSITION: Robot contains an AirConditioner
+        self.ac = AirConditioner(f"{name}-AC", capacity_tons=1.0)
+
+        print(f"🤖 {self.name} initialized at ({self.x}, {self.y})")
+
+    def walk(self, direction, steps=1):
+        """Move the robot in a direction. Movement generates heat."""
+        for _ in range(steps):
+            if direction == "right":
+                self.x += self.speed
+            elif direction == "left":
+                self.x -= self.speed
+            elif direction == "up":
+                self.y -= self.speed
+            elif direction == "down":
+                self.y += self.speed
+
+            self.steps_taken += 1
+
+            # Walking generates internal heat (motors, processors, friction)
+            self.internal_temp += 0.5
+
+        print(f"🚶 {self.name} walked {direction} {steps} steps → "
+              f"({self.x}, {self.y}) | Internal temp: {self.internal_temp:.1f}°F")
+
+    def run(self, direction, steps=1):
+        """Run fast — generates MORE heat than walking."""
+        old_speed = self.speed
+        self.speed = 3  # Running is 3x faster
+        self.walk(direction, steps)
+        self.internal_temp += 2.0  # Extra heat from running
+        self.speed = old_speed
+        print(f"   ⚡ Running bonus heat! Temp now: {self.internal_temp:.1f}°F")
+
+    def run_climate_control(self):
+        """
+        Use the internal AC to cool down the robot.
+        This is COMPOSITION in action: Robot delegates cooling to its AC.
+        """
+        if self.internal_temp > 75.0:
+            print(f"🌡️ {self.name} is warm ({self.internal_temp:.1f}°F) — activating AC")
+            self.internal_temp = self.ac.run_cycle(
+                self.internal_temp,
+                outdoor_temp=self.internal_temp + 10  # exhaust is hotter
+            )
+            print(f"   ❄️ Cooled to {self.internal_temp:.1f}°F")
+        else:
+            print(f"✅ {self.name} temperature nominal: {self.internal_temp:.1f}°F")
+
+    def status(self):
+        """Print full robot status."""
+        print(f"""
+╔═══════════════════════════════════════╗
+║  ROBOT STATUS: {self.name:<20}  ║
+╠═══════════════════════════════════════╣
+║  Position:     ({self.x:>3}, {self.y:>3})            ║
+║  Steps taken:  {self.steps_taken:>6}               ║
+║  Internal temp: {self.internal_temp:>5.1f}°F            ║
+║  AC unit:      {self.ac.unit_id:<20}  ║
+║  AC cycles:    {self.ac.cycle_count:>6}               ║
+╚═══════════════════════════════════════╝""")
+
+
+# ═══ Putting It Together ═══
+print("=" * 50)
+print("  ROBOT SIMULATION WITH CLIMATE CONTROL")
+print("=" * 50)
+
+bot = Robot("Atlas", x=0, y=0)
+bot.status()
+
+# Walk around — generates heat
+bot.walk("right", 5)
+bot.walk("up", 3)
+bot.run("right", 4)     # Running generates more heat!
+bot.run("down", 2)
+
+# Check temperature and cool down
+bot.run_climate_control()
+bot.run_climate_control()  # Run again if still warm
+
+bot.status()</code></pre>
+    </section>
+
+    <!-- ── Composition Explained ── -->
+    <section class="glass-card" id="composition">
+      <h2>🔗 4.4 — Composition: HAS-A vs IS-A</h2>
+      <p>
+        There are two main ways to combine classes in OOP:
+      </p>
+      <table class="concept-table">
+        <thead>
+          <tr><th>Pattern</th><th>Relationship</th><th>HVAC Example</th><th>When to Use</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Composition</strong> (HAS-A)</td>
+            <td>Object contains another object</td>
+            <td>An RTU <em>has</em> a compressor, <em>has</em> a fan, <em>has</em> controls</td>
+            <td>When parts are independent and interchangeable</td>
+          </tr>
+          <tr>
+            <td><strong>Inheritance</strong> (IS-A)</td>
+            <td>Object is a specialized version of another</td>
+            <td>A VRF system <em>is a</em> type of AC system</td>
+            <td>When objects share identity and common behavior</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Our Robot uses <strong>composition</strong> because a Robot is not a type of AirConditioner
+        — it <em>contains</em> one. The robot delegates cooling work to its AC object. This is
+        like how a real robot would have a cooling module installed inside it — a separate component
+        that can be swapped, upgraded, or maintained independently.
+      </p>
+      <pre><code class="language-python"># Composition in one line:
+self.ac = AirConditioner(f"{name}-AC", capacity_tons=1.0)
+
+# The Robot doesn't know HOW the AC works internally.
+# It just calls self.ac.run_cycle() and gets a result.
+# This is called ENCAPSULATION — hiding complexity behind a simple interface.
+
+# You could swap in a different cooling system:
+# self.cooler = LiquidCoolingSystem(...)
+# self.cooler = ThermoelectricCooler(...)
+# The Robot code barely changes — just the method call.</code></pre>
+    </section>
+
+    <!-- ── Key Takeaways ── -->
+    <section class="glass-card">
+      <h2>🎯 Module 4 Key Takeaways</h2>
+      <ul class="takeaway-list">
+        <li><strong>Classes</strong> are blueprints that bundle data (attributes) and behavior (methods).</li>
+        <li><strong><code>__init__</code></strong> is the constructor — it sets up initial state when you create an object.</li>
+        <li><strong><code>self</code></strong> refers to the specific object instance — like a serial number.</li>
+        <li><strong>Methods</strong> are functions that belong to a class and operate on <code>self</code>.</li>
+        <li><strong>Composition (HAS-A)</strong> means an object contains other objects — Robot HAS-AN AirConditioner.</li>
+        <li>Composition lets you build complex systems from simple, reusable parts.</li>
+      </ul>
+    </section>
+
+    <section class="glass-card cta-section">
+      <h2>Next Up: Module 5</h2>
+      <p>
+        Your robot can move and cool itself. But it can't <em>think</em>. In Module 5, we'll
+        connect to Google's Gemini AI API and give your robot a brain that can read its own
+        telemetry and answer questions about its thermal state.
+      </p>
+      <a href="module_05_api_ai_integration.html" class="btn btn-primary btn-large">Continue to Module 5: AI Integration →</a>
+    </section>
+  </main>
+
+  <footer class="module-footer">
+    <div class="footer-nav">
+      <a href="module_03_data_flow_logging.html" class="btn btn-nav btn-prev">← Module 3</a>
+      <span class="footer-module-indicator">Module 4 of 8</span>
+      <a href="module_05_api_ai_integration.html" class="btn btn-nav btn-next">Module 5 →</a>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="../static/js/app.js"></script>
+</body>
+</html>

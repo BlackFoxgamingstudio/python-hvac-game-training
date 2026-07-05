@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" data-module="6">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 6 — Diagnostic Troubleshooting | Python Systems Thinking</title>
+  <meta name="description" content="Read CSV logs, detect HVAC anomalies, and feed fault data to Gemini AI for automated troubleshooting and diagnostic analysis.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <a href="index.html" class="nav-title">Python Systems Thinking</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link">Module 1</a>
+      <a href="module_02_hvac_functions.html" class="nav-link">Module 2</a>
+      <a href="module_03_data_flow_logging.html" class="nav-link">Module 3</a>
+      <a href="module_04_oop_refactor.html" class="nav-link">Module 4</a>
+      <a href="module_05_api_ai_integration.html" class="nav-link">Module 5</a>
+      <a href="module_06_diagnostic_troubleshooting.html" class="nav-link active">Module 6</a>
+      <a href="module_07_game_programming.html" class="nav-link">Module 7</a>
+      <a href="module_08_final_project.html" class="nav-link">Module 8</a>
+    </div>
+  </nav>
+
+  <header class="module-hero">
+    <div class="hero-content">
+      <div class="hero-badge">Module 6 of 8</div>
+      <h1>Diagnostic Troubleshooting</h1>
+      <p class="hero-subtitle">AI-Powered Analysis</p>
+      <p class="hero-description">
+        An experienced HVAC tech can look at a trend log and spot problems — frozen coils,
+        high head pressure, low superheat, short-cycling. In this module, you'll teach Python
+        to do the same: read CSV logs, detect anomalies automatically, and then feed those
+        faults to Gemini AI for intelligent troubleshooting recommendations.
+      </p>
+    </div>
+  </header>
+
+  <main class="module-content">
+
+    <!-- ── Reading Trend Logs ── -->
+    <section class="glass-card" id="reading-logs">
+      <h2>📖 6.1 — Reading CSV Trend Logs for Analysis</h2>
+      <p>
+        In Module 3, we wrote CSV files. Now we read them back and process the data
+        programmatically. Let's start by creating a sample log with some embedded faults
+        that we'll detect:
+      </p>
+      <pre><code class="language-python">import csv
+from datetime import datetime, timedelta
+
+def generate_fault_log(filename="fault_telemetry.csv"):
+    """
+    Generate a CSV log with intentional HVAC faults embedded.
+    This simulates what you'd see on a real BAS with equipment issues.
+    """
+    headers = [
+        "timestamp", "cycle", "room_temp", "supply_air_temp",
+        "return_air_temp", "discharge_psi", "suction_psi",
+        "superheat", "subcooling", "delta_t", "system_status"
+    ]
+
+    sim_time = datetime(2025, 7, 15, 8, 0, 0)
+
+    # Normal operating data + injected faults
+    data = [
+        # Cycles 1-5: Normal operation
+        [1, 78.0, 55.2, 72.8, 408, 68, 10.0, 12.0, 17.6, "NORMAL"],
+        [2, 76.5, 55.0, 72.1, 410, 67, 9.5, 11.5, 17.1, "NORMAL"],
+        [3, 75.0, 54.8, 71.5, 412, 68, 10.2, 12.5, 16.7, "NORMAL"],
+        [4, 73.8, 55.1, 71.0, 408, 69, 9.8, 11.8, 15.9, "NORMAL"],
+        [5, 72.5, 55.0, 70.8, 410, 68, 10.0, 12.0, 15.8, "NORMAL"],
+
+        # Cycles 6-8: ⚠️ HIGH DISCHARGE PRESSURE (dirty condenser?)
+        [6, 73.0, 55.5, 71.2, 465, 68, 10.0, 8.0, 15.7, "WARNING"],
+        [7, 74.2, 56.0, 72.0, 482, 67, 9.5, 6.5, 16.0, "WARNING"],
+        [8, 75.5, 57.2, 73.1, 498, 66, 9.0, 5.0, 15.9, "ALARM"],
+
+        # Cycles 9-11: ⚠️ LOW SUPERHEAT (flooding evaporator!)
+        [9, 76.0, 48.0, 73.5, 500, 72, 2.0, 5.5, 25.5, "ALARM"],
+        [10, 76.8, 46.5, 74.0, 505, 74, 1.5, 4.8, 27.5, "CRITICAL"],
+        [11, 77.2, 45.0, 74.2, 510, 75, 0.8, 4.0, 29.2, "CRITICAL"],
+
+        # Cycles 12-14: ⚠️ FROZEN COIL (supply air too low)
+        [12, 77.5, 35.0, 74.5, 380, 55, 3.0, 15.0, 39.5, "CRITICAL"],
+        [13, 77.8, 32.0, 74.8, 370, 50, 2.5, 16.0, 42.8, "CRITICAL"],
+        [14, 78.0, 28.0, 75.0, 350, 45, 1.0, 18.0, 47.0, "EMERGENCY"],
+
+        # Cycles 15-17: System recovery after defrost
+        [15, 78.5, 55.0, 75.5, 405, 67, 9.0, 11.0, 20.5, "RECOVERY"],
+        [16, 77.0, 55.2, 74.0, 408, 68, 10.0, 12.0, 18.8, "NORMAL"],
+        [17, 75.5, 55.0, 73.0, 410, 68, 10.0, 12.0, 18.0, "NORMAL"],
+    ]
+
+    with open(filename, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(headers)
+        for row in data:
+            sim_time += timedelta(minutes=5)
+            writer.writerow([sim_time.isoformat()] + row)
+
+    print(f"✅ Fault log generated: {filename} ({len(data)} records)")
+    return filename
+
+generate_fault_log()</code></pre>
+    </section>
+
+    <!-- ── Anomaly Detection ── -->
+    <section class="glass-card" id="anomaly-detection">
+      <h2>🔍 6.2 — Anomaly Detection: Finding Faults in Data</h2>
+      <p>
+        Now let's write a diagnostic engine that reads the CSV and checks every row against
+        known fault thresholds. An experienced tech would check the same things:
+      </p>
+      <pre><code class="language-python">import csv
+
+class HVACDiagnosticEngine:
+    """
+    Automated HVAC fault detection engine.
+
+    Reads trend data and checks each reading against known fault
+    thresholds — just like an experienced tech scanning a trend log.
+    """
+
+    # Normal operating ranges (these are your "acceptable limits")
+    THRESHOLDS = {
+        "discharge_psi": {"min": 380, "max": 430, "name": "Discharge Pressure"},
+        "suction_psi": {"min": 60, "max": 75, "name": "Suction Pressure"},
+        "superheat": {"min": 5.0, "max": 15.0, "name": "Superheat"},
+        "subcooling": {"min": 8.0, "max": 15.0, "name": "Subcooling"},
+        "supply_air_temp": {"min": 48.0, "max": 60.0, "name": "Supply Air Temp"},
+        "delta_t": {"min": 14.0, "max": 22.0, "name": "Delta-T"},
+    }
+
+    def __init__(self):
+        self.faults = []
+        self.readings = []
+
+    def load_log(self, filename):
+        """Load CSV trend data into memory."""
+        self.readings = []
+        with open(filename, "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                self.readings.append(row)
+        print(f"📊 Loaded {len(self.readings)} records from {filename}")
+
+    def check_threshold(self, value, param_name, cycle, timestamp):
+        """Check if a value is outside its normal range."""
+        if param_name not in self.THRESHOLDS:
+            return
+
+        threshold = self.THRESHOLDS[param_name]
+        value = float(value)
+
+        if value < threshold["min"]:
+            severity = "CRITICAL" if value < threshold["min"] * 0.8 else "WARNING"
+            self.faults.append({
+                "cycle": cycle,
+                "timestamp": timestamp,
+                "parameter": threshold["name"],
+                "value": value,
+                "expected_range": f"{threshold['min']}-{threshold['max']}",
+                "deviation": f"{threshold['min'] - value:.1f} below minimum",
+                "severity": severity
+            })
+        elif value > threshold["max"]:
+            severity = "CRITICAL" if value > threshold["max"] * 1.2 else "WARNING"
+            self.faults.append({
+                "cycle": cycle,
+                "timestamp": timestamp,
+                "parameter": threshold["name"],
+                "value": value,
+                "expected_range": f"{threshold['min']}-{threshold['max']}",
+                "deviation": f"{value - threshold['max']:.1f} above maximum",
+                "severity": severity
+            })
+
+    def run_diagnostics(self):
+        """
+        Scan all readings and detect faults.
+        This is the automated equivalent of a tech reviewing trend data.
+        """
+        self.faults = []
+
+        for row in self.readings:
+            cycle = row["cycle"]
+            timestamp = row["timestamp"]
+
+            # Check each parameter against thresholds
+            for param in self.THRESHOLDS:
+                if param in row:
+                    self.check_threshold(row[param], param, cycle, timestamp)
+
+        print(f"\n🔍 DIAGNOSTIC SCAN COMPLETE")
+        print(f"   Records scanned: {len(self.readings)}")
+        print(f"   Faults detected: {len(self.faults)}")
+
+        return self.faults
+
+    def generate_fault_report(self):
+        """Generate a formatted fault report."""
+        if not self.faults:
+            print("✅ No faults detected — system operating normally.")
+            return ""
+
+        report_lines = []
+        report_lines.append("=" * 60)
+        report_lines.append("  HVAC FAULT REPORT")
+        report_lines.append("=" * 60)
+
+        # Group faults by severity
+        for severity in ["CRITICAL", "WARNING"]:
+            severity_faults = [f for f in self.faults if f["severity"] == severity]
+            if severity_faults:
+                icon = "🚨" if severity == "CRITICAL" else "⚠️"
+                report_lines.append(f"\n{icon} {severity} ({len(severity_faults)} faults):")
+                report_lines.append("-" * 50)
+                for fault in severity_faults:
+                    report_lines.append(
+                        f"  Cycle {fault['cycle']:>2} | {fault['parameter']:<20} | "
+                        f"Value: {fault['value']:>7.1f} | "
+                        f"Range: {fault['expected_range']}"
+                    )
+
+        report_lines.append("\n" + "=" * 60)
+        report = "\n".join(report_lines)
+        print(report)
+        return report
+
+
+# ═══ Run the Diagnostic Engine ═══
+engine = HVACDiagnosticEngine()
+engine.load_log("fault_telemetry.csv")
+faults = engine.run_diagnostics()
+fault_report = engine.generate_fault_report()</code></pre>
+    </section>
+
+    <!-- ── AI Troubleshooting ── -->
+    <section class="glass-card" id="ai-troubleshooting">
+      <h2>🧠 6.3 — AI-Powered Troubleshooting with Gemini</h2>
+      <p>
+        Now the powerful part: feed the fault report to Gemini and let AI do what an expert
+        tech would do — analyze the pattern of faults, identify root causes, and recommend
+        corrective actions:
+      </p>
+      <pre><code class="language-python">import google.generativeai as genai
+import os
+
+class AITroubleshooter:
+    """
+    AI-powered HVAC troubleshooting assistant.
+
+    Takes fault reports from the DiagnosticEngine and uses Gemini
+    to analyze patterns, identify root causes, and recommend fixes.
+    """
+
+    def __init__(self):
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not set!")
+
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel("gemini-pro")
+
+    def analyze_faults(self, fault_report, readings_summary):
+        """
+        Send fault data to Gemini for expert analysis.
+
+        Args:
+            fault_report: formatted string from DiagnosticEngine
+            readings_summary: dict with min/max/avg of key parameters
+        """
+        prompt = f"""You are a senior HVAC diagnostic engineer with 20 years
+of experience in commercial refrigeration and air conditioning systems.
+
+A Building Automation System has flagged the following faults from
+trend log data. Analyze the fault pattern and provide:
+
+1. ROOT CAUSE ANALYSIS — What is most likely causing these faults?
+2. FAULT PROGRESSION — How did the problem develop over time?
+3. IMMEDIATE ACTIONS — What should the technician check first?
+4. CORRECTIVE REPAIRS — What repairs are needed?
+5. PREVENTIVE MEASURES — How to prevent this in the future?
+
+FAULT REPORT:
+{fault_report}
+
+DATA SUMMARY:
+- Supply Air Temp range: {readings_summary['sat_min']:.1f}°F to {readings_summary['sat_max']:.1f}°F
+- Discharge Pressure range: {readings_summary['disch_min']} to {readings_summary['disch_max']} PSI
+- Suction Pressure range: {readings_summary['suct_min']} to {readings_summary['suct_max']} PSI
+- Superheat range: {readings_summary['sh_min']:.1f}°F to {readings_summary['sh_max']:.1f}°F
+
+Provide your analysis in a clear, actionable format that a field
+technician can follow. Use industry-standard HVAC terminology."""
+
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            return f"❌ Analysis error: {e}"
+
+
+# ═══ Run AI Analysis ═══
+def run_full_diagnostic_pipeline(log_file="fault_telemetry.csv"):
+    """Complete pipeline: Load → Detect → Analyze with AI."""
+
+    # Step 1: Load and scan
+    engine = HVACDiagnosticEngine()
+    engine.load_log(log_file)
+    faults = engine.run_diagnostics()
+    fault_report = engine.generate_fault_report()
+
+    # Step 2: Build readings summary
+    sat_values = [float(r["supply_air_temp"]) for r in engine.readings]
+    disch_values = [int(r["discharge_psi"]) for r in engine.readings]
+    suct_values = [int(r["suction_psi"]) for r in engine.readings]
+    sh_values = [float(r["superheat"]) for r in engine.readings]
+
+    summary = {
+        "sat_min": min(sat_values), "sat_max": max(sat_values),
+        "disch_min": min(disch_values), "disch_max": max(disch_values),
+        "suct_min": min(suct_values), "suct_max": max(suct_values),
+        "sh_min": min(sh_values), "sh_max": max(sh_values),
+    }
+
+    # Step 3: AI analysis
+    if faults:
+        print("\n🧠 Sending fault data to AI for analysis...")
+        troubleshooter = AITroubleshooter()
+        analysis = troubleshooter.analyze_faults(fault_report, summary)
+        print("\n" + "=" * 60)
+        print("  AI DIAGNOSTIC ANALYSIS")
+        print("=" * 60)
+        print(analysis)
+    else:
+        print("✅ No faults found — system operating normally.")
+
+# run_full_diagnostic_pipeline()  # Uncomment to run!</code></pre>
+    </section>
+
+    <!-- ── Terminal Dashboard ── -->
+    <section class="glass-card" id="terminal-dashboard">
+      <h2>📟 6.4 — Terminal Dashboard: Real-Time Monitoring Display</h2>
+      <p>
+        Let's build a terminal-based dashboard that displays system status in real time.
+        This is like a mini BAS display right in your terminal:
+      </p>
+      <pre><code class="language-python">import os
+import time
+
+def display_dashboard(readings, current_index, faults):
+    """
+    Display a real-time terminal dashboard for HVAC monitoring.
+    Clears the screen and redraws each cycle.
+    """
+    # Clear the terminal screen
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+    row = readings[current_index]
+    cycle = row["cycle"]
+    status = row["system_status"]
+
+    # Status color indicators
+    status_icons = {
+        "NORMAL": "🟢",
+        "WARNING": "🟡",
+        "ALARM": "🟠",
+        "CRITICAL": "🔴",
+        "EMERGENCY": "🚨",
+        "RECOVERY": "🔵"
+    }
+    icon = status_icons.get(status, "⚪")
+
+    # Count active faults for this cycle
+    cycle_faults = [f for f in faults if f["cycle"] == cycle]
+
+    print(f"""
+╔══════════════════════════════════════════════════════════╗
+║  🏢  HVAC MONITORING DASHBOARD           {icon} {status:>10}  ║
+╠══════════════════════════════════════════════════════════╣
+║                                                          ║
+║  Cycle: {cycle:>3}   Time: {row['timestamp'][:19]:<20}        ║
+║                                                          ║
+║  ┌─── TEMPERATURES ──────────────────────────────────┐   ║
+║  │  Room Temp:       {float(row['room_temp']):>6.1f}°F                      │   ║
+║  │  Supply Air:      {float(row['supply_air_temp']):>6.1f}°F                      │   ║
+║  │  Return Air:      {float(row['return_air_temp']):>6.1f}°F                      │   ║
+║  │  Delta-T:         {float(row['delta_t']):>6.1f}°F                      │   ║
+║  └───────────────────────────────────────────────────┘   ║
+║                                                          ║
+║  ┌─── PRESSURES ─────────────────────────────────────┐   ║
+║  │  Discharge:       {int(row['discharge_psi']):>6} PSI                     │   ║
+║  │  Suction:         {int(row['suction_psi']):>6} PSI                     │   ║
+║  └───────────────────────────────────────────────────┘   ║
+║                                                          ║
+║  ┌─── REFRIGERANT ───────────────────────────────────┐   ║
+║  │  Superheat:       {float(row['superheat']):>6.1f}°F                      │   ║
+║  │  Subcooling:      {float(row['subcooling']):>6.1f}°F                      │   ║
+║  └───────────────────────────────────────────────────┘   ║
+║                                                          ║
+║  Active Faults: {len(cycle_faults):>2}                                       ║
+╚══════════════════════════════════════════════════════════╝
+""")
+
+    # Show faults for this cycle
+    if cycle_faults:
+        for fault in cycle_faults:
+            print(f"  ⚠️ {fault['severity']}: {fault['parameter']} = "
+                  f"{fault['value']:.1f} (range: {fault['expected_range']})")
+
+
+def run_dashboard(log_file="fault_telemetry.csv"):
+    """Run the monitoring dashboard, cycling through trend data."""
+    engine = HVACDiagnosticEngine()
+    engine.load_log(log_file)
+    faults = engine.run_diagnostics()
+
+    print("📺 Starting Dashboard... (Ctrl+C to stop)")
+    time.sleep(1)
+
+    for i in range(len(engine.readings)):
+        display_dashboard(engine.readings, i, faults)
+        time.sleep(1.0)  # 1 second per cycle for demo
+
+    print("\n📺 Dashboard playback complete.")
+
+# run_dashboard()  # Uncomment to run!</code></pre>
+    </section>
+
+    <!-- ── Fault Pattern Reference ── -->
+    <section class="glass-card" id="fault-patterns">
+      <h2>📋 6.5 — Common HVAC Fault Patterns</h2>
+      <p>
+        Here's a reference table of common faults, their symptoms in trend data, and likely
+        root causes. Your diagnostic engine checks for these:
+      </p>
+      <table class="concept-table">
+        <thead>
+          <tr>
+            <th>Fault</th>
+            <th>Symptoms in Data</th>
+            <th>Likely Root Cause</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Dirty Condenser Coil</strong></td>
+            <td>High discharge pressure, low subcooling, rising room temp</td>
+            <td>Restricted airflow across condenser coils — needs cleaning</td>
+          </tr>
+          <tr>
+            <td><strong>Low Refrigerant Charge</strong></td>
+            <td>Low suction pressure, high superheat, low subcooling</td>
+            <td>Refrigerant leak — find leak, repair, recharge</td>
+          </tr>
+          <tr>
+            <td><strong>Frozen Evaporator Coil</strong></td>
+            <td>Supply air temp drops below 40°F, low suction pressure</td>
+            <td>Airflow restriction (dirty filter), low charge, or TXV issue</td>
+          </tr>
+          <tr>
+            <td><strong>Overcharged System</strong></td>
+            <td>High discharge pressure, high subcooling, liquid slugging risk</td>
+            <td>Too much refrigerant — recover excess</td>
+          </tr>
+          <tr>
+            <td><strong>Compressor Failure</strong></td>
+            <td>Equal suction and discharge pressure, no cooling</td>
+            <td>Compressor not running or has lost compression</td>
+          </tr>
+          <tr>
+            <td><strong>TXV Stuck Open</strong></td>
+            <td>Very low superheat (&lt;3°F), flooding risk</td>
+            <td>Expansion valve not metering properly — replace TXV</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── Key Takeaways ── -->
+    <section class="glass-card">
+      <h2>🎯 Module 6 Key Takeaways</h2>
+      <ul class="takeaway-list">
+        <li><strong>Reading CSV data</strong> back is the foundation of all analytics — your BAS trend log analysis.</li>
+        <li><strong>Threshold-based fault detection</strong> checks each reading against known good ranges.</li>
+        <li><strong>Pattern analysis</strong> reveals how faults develop over time — not just individual readings.</li>
+        <li><strong>AI troubleshooting</strong> combines data context with expert knowledge for intelligent diagnosis.</li>
+        <li>The <strong>diagnostic pipeline</strong> (load → detect → analyze → display) mirrors real BMS analytics platforms.</li>
+        <li>A <strong>terminal dashboard</strong> provides real-time visibility — your mini BAS display.</li>
+      </ul>
+    </section>
+
+    <section class="glass-card cta-section">
+      <h2>Next Up: Module 7</h2>
+      <p>
+        Everything so far has been text in a terminal. In Module 7, we bring your robot
+        to life visually with <strong>Pygame</strong> — a 2D game library. Your Robot class
+        becomes a sprite on screen, your HVAC system becomes a game subsystem, and your
+        telemetry becomes a real-time HUD overlay.
+      </p>
+      <a href="module_07_game_programming.html" class="btn btn-primary btn-large">Continue to Module 7: Game Programming →</a>
+    </section>
+  </main>
+
+  <footer class="module-footer">
+    <div class="footer-nav">
+      <a href="module_05_api_ai_integration.html" class="btn btn-nav btn-prev">← Module 5</a>
+      <span class="footer-module-indicator">Module 6 of 8</span>
+      <a href="module_07_game_programming.html" class="btn btn-nav btn-next">Module 7 →</a>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="../static/js/app.js"></script>
+</body>
+</html>

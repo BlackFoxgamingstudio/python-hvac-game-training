@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" data-module="0">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python Systems Thinking: From HVAC to Game Engine</title>
+  <meta name="description" content="Learn Python programming through real-world HVAC systems and game development. An 8-module course bridging mechanical systems thinking with software engineering.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <!-- ═══════════════ TOP NAV ═══════════════ -->
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-title">Python Systems Thinking</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link">Start Learning →</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <header class="module-hero hero-landing">
+    <div class="hero-content">
+      <div class="hero-badge">🔧 8-Module Course</div>
+      <h1>Python Systems Thinking</h1>
+      <p class="hero-subtitle">From HVAC to Game Engine</p>
+      <p class="hero-description">
+        You already understand systems — thermodynamics, pressure differentials, refrigerant cycles,
+        and the invisible forces that make buildings comfortable. Now channel that systems thinking
+        into Python programming. This course maps every HVAC concept you know to a programming
+        concept you'll master, then culminates in building a complete robot simulation game.
+      </p>
+      <div class="hero-actions">
+        <a href="module_01_python_basics.html" class="btn btn-primary">Begin Module 1 →</a>
+        <a href="#modules" class="btn btn-secondary">View All Modules</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <main class="module-content">
+
+    <!-- ── What You'll Build ── -->
+    <section class="glass-card" id="what-youll-build">
+      <h2>🏗️ What You'll Build</h2>
+      <p>
+        By the end of this course, you'll have created a fully interactive <strong>Robot Simulation Game</strong>
+        powered by Python, Pygame, and the Gemini AI API. Here's what the final project includes:
+      </p>
+      <div class="build-grid">
+        <div class="build-item">
+          <span class="build-icon">🤖</span>
+          <h3>Robot Character</h3>
+          <p>A programmable robot that walks, runs, and responds to keyboard input in a 2D game world — built with classes and OOP.</p>
+        </div>
+        <div class="build-item">
+          <span class="build-icon">❄️</span>
+          <h3>HVAC Simulation</h3>
+          <p>A complete AC system — evaporator, compressor, condenser, expansion valve — modeled as Python functions with real thermodynamic math.</p>
+        </div>
+        <div class="build-item">
+          <span class="build-icon">📊</span>
+          <h3>Telemetry Dashboard</h3>
+          <p>CSV-based data logging that records every sensor reading, with live HUD overlay showing temps, pressures, and system state.</p>
+        </div>
+        <div class="build-item">
+          <span class="build-icon">🧠</span>
+          <h3>AI Robot Brain</h3>
+          <p>Google Gemini API integration that gives your robot an intelligent diagnostic brain — it reads telemetry and troubleshoots faults in natural language.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Prerequisites ── -->
+    <section class="glass-card" id="prerequisites">
+      <h2>📋 Prerequisites</h2>
+      <p>This course is designed for <strong>HVAC technicians, building engineers, and mechanical professionals</strong> who want to learn programming. You don't need any prior coding experience — just bring your systems knowledge.</p>
+      <div class="prereq-grid">
+        <div class="prereq-item prereq-need">
+          <h3>✅ What You Need</h3>
+          <ul>
+            <li>Basic understanding of HVAC systems (refrigerant cycle, thermostats, sensors)</li>
+            <li>A computer with Python 3.10+ installed</li>
+            <li>A code editor (VS Code recommended)</li>
+            <li>Willingness to experiment and break things</li>
+            <li>A Google Cloud account (free tier, for Gemini API in Modules 5–6)</li>
+          </ul>
+        </div>
+        <div class="prereq-item prereq-noneed">
+          <h3>❌ What You Don't Need</h3>
+          <ul>
+            <li>Prior programming experience</li>
+            <li>College-level math (we use basic arithmetic)</li>
+            <li>Game development experience</li>
+            <li>A powerful computer (any modern laptop works)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Module Grid ── -->
+    <section class="glass-card" id="modules">
+      <h2>📚 Course Modules</h2>
+      <p>Eight carefully sequenced modules, each building on the last. Every module bridges an HVAC concept to a programming concept.</p>
+
+      <div class="module-grid">
+
+        <!-- Module 1 -->
+        <a href="module_01_python_basics.html" class="module-card" data-module="1">
+          <div class="module-number">01</div>
+          <h3>Python Fundamentals</h3>
+          <p class="module-tagline">The Language of Systems</p>
+          <p class="module-desc">
+            Variables are like sensor readings. Conditionals are like thermostats.
+            Learn Python basics through HVAC examples — temperature values, pressure readings,
+            f-string sensor readouts, and control logic.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">Variables</span>
+            <span class="topic-tag">Types</span>
+            <span class="topic-tag">f-strings</span>
+            <span class="topic-tag">Conditionals</span>
+            <span class="topic-tag">Loops</span>
+          </div>
+        </a>
+
+        <!-- Module 2 -->
+        <a href="module_02_hvac_functions.html" class="module-card" data-module="2">
+          <div class="module-number">02</div>
+          <h3>HVAC as Functions</h3>
+          <p class="module-tagline">Mapping Hardware to Software</p>
+          <p class="module-desc">
+            Each AC component becomes a Python function. The evaporator absorbs heat,
+            the compressor squeezes gas, the condenser rejects heat, the expansion valve
+            drops pressure. Chain them into a complete refrigeration cycle.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">Functions</span>
+            <span class="topic-tag">Parameters</span>
+            <span class="topic-tag">Returns</span>
+            <span class="topic-tag">Dicts</span>
+            <span class="topic-tag">Cycles</span>
+          </div>
+        </a>
+
+        <!-- Module 3 -->
+        <a href="module_03_data_flow_logging.html" class="module-card" data-module="3">
+          <div class="module-number">03</div>
+          <h3>Data Flow & Diagnostic Logging</h3>
+          <p class="module-tagline">CSV Telemetry</p>
+          <p class="module-desc">
+            Every BAS (Building Automation System) logs trend data. Learn Python's csv module,
+            file I/O, and context managers to record every sensor reading from your
+            simulated AC system — just like a real BMS trend log.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">CSV</span>
+            <span class="topic-tag">File I/O</span>
+            <span class="topic-tag">Context Managers</span>
+            <span class="topic-tag">Telemetry</span>
+          </div>
+        </a>
+
+        <!-- Module 4 -->
+        <a href="module_04_oop_refactor.html" class="module-card" data-module="4">
+          <div class="module-number">04</div>
+          <h3>OOP Refactor</h3>
+          <p class="module-tagline">Robot + AC Composition</p>
+          <p class="module-desc">
+            Refactor your functions into classes. The AirConditioner becomes an object
+            with state and methods. The Robot object contains an AC — that's composition.
+            A robot HAS-AN air conditioner, just like a real machine.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">Classes</span>
+            <span class="topic-tag">__init__</span>
+            <span class="topic-tag">self</span>
+            <span class="topic-tag">Methods</span>
+            <span class="topic-tag">Composition</span>
+          </div>
+        </a>
+
+        <!-- Module 5 -->
+        <a href="module_05_api_ai_integration.html" class="module-card" data-module="5">
+          <div class="module-number">05</div>
+          <h3>AI Integration</h3>
+          <p class="module-tagline">Gemini API & Robot Brain</p>
+          <p class="module-desc">
+            Give your robot a brain. Connect to Google's Gemini API, feed it
+            live HVAC telemetry as system instructions, and build an interactive CLI
+            where you can ask your robot questions about its own thermal state.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">APIs</span>
+            <span class="topic-tag">Env Vars</span>
+            <span class="topic-tag">SDK</span>
+            <span class="topic-tag">Prompting</span>
+            <span class="topic-tag">CLI</span>
+          </div>
+        </a>
+
+        <!-- Module 6 -->
+        <a href="module_06_diagnostic_troubleshooting.html" class="module-card" data-module="6">
+          <div class="module-number">06</div>
+          <h3>Diagnostic Troubleshooting</h3>
+          <p class="module-tagline">AI-Powered Analysis</p>
+          <p class="module-desc">
+            Read CSV logs back into Python. Detect anomalies — frozen coils, high head pressure,
+            low superheat. Feed fault data to Gemini for AI-powered troubleshooting,
+            just like an advanced BMS analytics platform.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">Log Analysis</span>
+            <span class="topic-tag">Fault Detection</span>
+            <span class="topic-tag">AI Diagnosis</span>
+            <span class="topic-tag">Dashboard</span>
+          </div>
+        </a>
+
+        <!-- Module 7 -->
+        <a href="module_07_game_programming.html" class="module-card" data-module="7">
+          <div class="module-number">07</div>
+          <h3>Game Programming</h3>
+          <p class="module-tagline">Pygame & Game Objects</p>
+          <p class="module-desc">
+            Transform your Robot class into a visual game character. Learn the game loop,
+            sprite rendering, keyboard input, and HUD overlays. Your HVAC simulation
+            becomes a real-time game subsystem with visual feedback.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">Pygame</span>
+            <span class="topic-tag">Game Loop</span>
+            <span class="topic-tag">Sprites</span>
+            <span class="topic-tag">Events</span>
+            <span class="topic-tag">HUD</span>
+          </div>
+        </a>
+
+        <!-- Module 8 -->
+        <a href="module_08_final_project.html" class="module-card" data-module="8">
+          <div class="module-number">08</div>
+          <h3>Final Project</h3>
+          <p class="module-tagline">Complete Robot Simulation</p>
+          <p class="module-desc">
+            Bring it all together. Review the full architecture, see how every module
+            connects, run the complete simulation, and explore extension ideas.
+            Reflect on the systems thinking journey from HVAC tech to Python programmer.
+          </p>
+          <div class="module-topics">
+            <span class="topic-tag">Architecture</span>
+            <span class="topic-tag">Integration</span>
+            <span class="topic-tag">Extensions</span>
+            <span class="topic-tag">Reflection</span>
+          </div>
+        </a>
+
+      </div><!-- /module-grid -->
+    </section>
+
+    <!-- ── Learning Philosophy ── -->
+    <section class="glass-card">
+      <h2>🧠 The Systems Thinking Approach</h2>
+      <p>
+        Most coding courses teach syntax in a vacuum. This one is different. Every concept
+        maps to something you already understand from working with physical systems:
+      </p>
+      <table class="concept-table">
+        <thead>
+          <tr>
+            <th>HVAC Concept</th>
+            <th>Python Equivalent</th>
+            <th>Why It Clicks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sensor reading (72°F)</td>
+            <td>Variable (<code>temp = 72.0</code>)</td>
+            <td>Both store a value that changes over time</td>
+          </tr>
+          <tr>
+            <td>Thermostat logic</td>
+            <td>if/elif/else</td>
+            <td>Both make decisions based on conditions</td>
+          </tr>
+          <tr>
+            <td>AC component (evaporator)</td>
+            <td>Function</td>
+            <td>Both take input, do work, produce output</td>
+          </tr>
+          <tr>
+            <td>Refrigeration cycle</td>
+            <td>Loop</td>
+            <td>Both repeat a sequence of steps</td>
+          </tr>
+          <tr>
+            <td>BAS trend log</td>
+            <td>CSV file</td>
+            <td>Both record time-series data for analysis</td>
+          </tr>
+          <tr>
+            <td>Equipment unit (RTU, AHU)</td>
+            <td>Class / Object</td>
+            <td>Both bundle state + behavior into one entity</td>
+          </tr>
+          <tr>
+            <td>Smart building analytics</td>
+            <td>Gemini AI API</td>
+            <td>Both analyze data and provide recommendations</td>
+          </tr>
+          <tr>
+            <td>Control panel display</td>
+            <td>Pygame HUD</td>
+            <td>Both visualize system state in real time</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="glass-card cta-section">
+      <h2>Ready to Start?</h2>
+      <p>
+        You've spent years mastering physical systems. Now it's time to master the digital ones.
+        Module 1 starts with the absolute basics — no prior coding experience needed.
+      </p>
+      <a href="module_01_python_basics.html" class="btn btn-primary btn-large">Launch Module 1: Python Fundamentals →</a>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="module-footer">
+    <div class="footer-nav">
+      <span class="footer-copy">© 2025 Python Systems Thinking — From HVAC to Game Engine</span>
+      <a href="module_01_python_basics.html" class="btn btn-nav btn-next">Begin Course →</a>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="../static/js/app.js"></script>
+</body>
+</html>

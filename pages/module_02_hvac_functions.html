@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" data-module="2">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 2 — HVAC as Functions | Python Systems Thinking</title>
+  <meta name="description" content="Map each AC component to a Python function: evaporator, compressor, condenser, expansion valve. Learn function definition, parameters, and returns.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <a href="index.html" class="nav-title">Python Systems Thinking</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link">Module 1</a>
+      <a href="module_02_hvac_functions.html" class="nav-link active">Module 2</a>
+      <a href="module_03_data_flow_logging.html" class="nav-link">Module 3</a>
+      <a href="module_04_oop_refactor.html" class="nav-link">Module 4</a>
+      <a href="module_05_api_ai_integration.html" class="nav-link">Module 5</a>
+      <a href="module_06_diagnostic_troubleshooting.html" class="nav-link">Module 6</a>
+      <a href="module_07_game_programming.html" class="nav-link">Module 7</a>
+      <a href="module_08_final_project.html" class="nav-link">Module 8</a>
+    </div>
+  </nav>
+
+  <header class="module-hero">
+    <div class="hero-content">
+      <div class="hero-badge">Module 2 of 8</div>
+      <h1>HVAC as Functions</h1>
+      <p class="hero-subtitle">Mapping Hardware to Software</p>
+      <p class="hero-description">
+        An air conditioning system has four main components: the evaporator, compressor, condenser,
+        and expansion valve. Each one takes refrigerant in one state and transforms it into
+        another. In Python, that's exactly what a <strong>function</strong> does — takes input,
+        does work, and produces output. Let's build each component as code.
+      </p>
+    </div>
+  </header>
+
+  <main class="module-content">
+
+    <!-- ── The Refrigeration Cycle ── -->
+    <section class="glass-card" id="cycle-overview">
+      <h2>🔄 2.1 — The Refrigeration Cycle: A System of Transformations</h2>
+      <p>
+        Before we write code, let's review the cycle you already know. Refrigerant flows through
+        four components in a loop, changing temperature, pressure, and state (liquid vs. gas)
+        at each stage:
+      </p>
+      <div class="cycle-diagram">
+        <div class="cycle-step">
+          <span class="cycle-icon">❄️</span>
+          <h3>1. Evaporator</h3>
+          <p><strong>Physics:</strong> Low-pressure liquid refrigerant absorbs heat from indoor air, boiling into a low-pressure gas. Indoor air gets cooler.</p>
+          <p><strong>Analogy:</strong> Sweat evaporating off your skin — it absorbs body heat and cools you down.</p>
+        </div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-step">
+          <span class="cycle-icon">🔧</span>
+          <h3>2. Compressor</h3>
+          <p><strong>Physics:</strong> Squeezes the low-pressure gas into high-pressure gas. Temperature spikes dramatically (PV=nRT — compress gas, temp rises).</p>
+          <p><strong>Analogy:</strong> A bicycle pump getting hot when you pump air — you're compressing gas.</p>
+        </div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-step">
+          <span class="cycle-icon">🌡️</span>
+          <h3>3. Condenser</h3>
+          <p><strong>Physics:</strong> Hot high-pressure gas rejects heat to outdoor air, condensing into a high-pressure liquid. The outdoor unit's fan blows this heat away.</p>
+          <p><strong>Analogy:</strong> A car radiator — hot fluid flows through, air blows over it, heat leaves.</p>
+        </div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-step">
+          <span class="cycle-icon">💧</span>
+          <h3>4. Expansion Valve</h3>
+          <p><strong>Physics:</strong> High-pressure liquid passes through a tiny orifice, pressure drops dramatically. Refrigerant becomes a cold low-pressure mix, ready to absorb heat again.</p>
+          <p><strong>Analogy:</strong> Spray can getting cold when you spray — pressure drops, temperature drops.</p>
+        </div>
+      </div>
+      <p>
+        Now let's translate each component into a Python function. Each function will receive
+        a <strong>dictionary</strong> containing the refrigerant's current state and return a
+        new dictionary with the transformed state.
+      </p>
+    </section>
+
+    <!-- ── What Is a Function? ── -->
+    <section class="glass-card" id="what-is-function">
+      <h2>🧱 2.2 — What Is a Function?</h2>
+      <p>
+        A function is a reusable block of code that performs a specific task. It has three parts:
+      </p>
+      <ol>
+        <li><strong>Parameters (inputs)</strong> — What goes in. Like refrigerant entering a component.</li>
+        <li><strong>Body (the work)</strong> — What happens inside. The transformation.</li>
+        <li><strong>Return value (output)</strong> — What comes out. The transformed refrigerant.</li>
+      </ol>
+      <pre><code class="language-python"># Basic function syntax
+def function_name(parameter1, parameter2):
+    """Docstring: explains what the function does."""
+    # Do some work
+    result = parameter1 + parameter2
+    return result  # Send the result back
+
+# Calling (using) the function
+answer = function_name(10, 20)
+print(answer)  # 30</code></pre>
+
+      <h3>Dictionaries: Bundling Related Data</h3>
+      <p>
+        We need to pass multiple values together — temperature, pressure, and state. A Python
+        <strong>dictionary</strong> is perfect for this. It stores key-value pairs, like a label
+        and its reading:
+      </p>
+      <pre><code class="language-python"># A dictionary holds related data together
+refrigerant = {
+    "temp": 40.0,       # Temperature in °F
+    "pressure": 68,     # Pressure in PSI
+    "state": "liquid"   # Physical state
+}
+
+# Access values by key
+print(refrigerant["temp"])      # 40.0
+print(refrigerant["state"])     # "liquid"
+
+# Update a value
+refrigerant["temp"] = 45.0
+print(refrigerant["temp"])      # 45.0</code></pre>
+    </section>
+
+    <!-- ── The Four Functions ── -->
+    <section class="glass-card" id="evaporator">
+      <h2>❄️ 2.3 — Function 1: Evaporator</h2>
+      <p>
+        The evaporator absorbs heat from indoor air. Low-pressure liquid refrigerant enters,
+        absorbs heat, and exits as low-pressure gas. The indoor air temperature drops.
+      </p>
+      <pre><code class="language-python">def evaporator(refrigerant, room_temp):
+    """
+    Simulate the evaporator coil.
+
+    Physics: Low-pressure liquid refrigerant absorbs heat from indoor air,
+    boiling into a gas. The room air cools down.
+
+    Args:
+        refrigerant: dict with 'temp', 'pressure', 'state'
+        room_temp: current room temperature in °F
+
+    Returns:
+        tuple: (updated refrigerant dict, new room temperature)
+    """
+    print("  ❄️ EVAPORATOR:")
+    print(f"     IN  → Temp: {refrigerant['temp']:.1f}°F | "
+          f"Pressure: {refrigerant['pressure']} PSI | "
+          f"State: {refrigerant['state']}")
+
+    # Refrigerant absorbs heat from room air
+    # It warms up and changes from liquid to gas
+    heat_absorbed = 15.0  # BTU equivalent in degrees
+
+    new_refrigerant = {
+        "temp": refrigerant["temp"] + heat_absorbed,
+        "pressure": refrigerant["pressure"],  # Pressure stays the same
+        "state": "gas"  # Liquid boils into gas
+    }
+
+    # Room air loses the heat that refrigerant absorbed
+    new_room_temp = room_temp - 2.0  # Room cools by ~2°F per cycle
+
+    print(f"     OUT ← Temp: {new_refrigerant['temp']:.1f}°F | "
+          f"Pressure: {new_refrigerant['pressure']} PSI | "
+          f"State: {new_refrigerant['state']}")
+    print(f"     Room temp: {room_temp:.1f}°F → {new_room_temp:.1f}°F")
+
+    return new_refrigerant, new_room_temp</code></pre>
+    </section>
+
+    <section class="glass-card" id="compressor">
+      <h2>🔧 2.4 — Function 2: Compressor</h2>
+      <p>
+        The compressor is the heart of the system. It squeezes low-pressure gas into high-pressure
+        gas. When you compress gas, its temperature rises dramatically — this is basic
+        thermodynamics (PV = nRT). The compressor is what makes it possible to reject heat
+        outdoors even when it's hot outside.
+      </p>
+      <pre><code class="language-python">def compressor(refrigerant):
+    """
+    Simulate the compressor.
+
+    Physics: Mechanically compresses low-pressure gas into high-pressure gas.
+    Temperature spikes due to compression (Gay-Lussac's Law: P/T = constant
+    for fixed volume → increase P, T increases proportionally).
+
+    Args:
+        refrigerant: dict with 'temp', 'pressure', 'state'
+
+    Returns:
+        dict: updated refrigerant state
+    """
+    print("  🔧 COMPRESSOR:")
+    print(f"     IN  → Temp: {refrigerant['temp']:.1f}°F | "
+          f"Pressure: {refrigerant['pressure']} PSI | "
+          f"State: {refrigerant['state']}")
+
+    # Compression raises both pressure and temperature dramatically
+    compression_ratio = 6.0  # Typical for R-410A systems
+
+    new_refrigerant = {
+        "temp": refrigerant["temp"] + 80.0,  # Huge temp spike from compression
+        "pressure": int(refrigerant["pressure"] * compression_ratio),
+        "state": "gas"  # Still a gas, just much hotter and denser
+    }
+
+    print(f"     OUT ← Temp: {new_refrigerant['temp']:.1f}°F | "
+          f"Pressure: {new_refrigerant['pressure']} PSI | "
+          f"State: {new_refrigerant['state']}")
+
+    return new_refrigerant</code></pre>
+    </section>
+
+    <section class="glass-card" id="condenser">
+      <h2>🌡️ 2.5 — Function 3: Condenser</h2>
+      <p>
+        The condenser is the outdoor coil. Hot, high-pressure gas from the compressor flows
+        through it while the condenser fan blows outdoor air across the coils. The refrigerant
+        rejects its heat to the outdoors and condenses from gas back to liquid.
+      </p>
+      <pre><code class="language-python">def condenser(refrigerant, outdoor_temp):
+    """
+    Simulate the condenser coil.
+
+    Physics: Hot high-pressure gas flows through outdoor coils.
+    Condenser fan blows outdoor air across coils, removing heat.
+    Refrigerant cools and condenses from gas to liquid.
+
+    The condenser can only cool the refrigerant down NEAR the outdoor
+    temp — it can't go below it (heat flows hot → cold).
+
+    Args:
+        refrigerant: dict with 'temp', 'pressure', 'state'
+        outdoor_temp: current outdoor temperature in °F
+
+    Returns:
+        dict: updated refrigerant state
+    """
+    print("  🌡️ CONDENSER:")
+    print(f"     IN  → Temp: {refrigerant['temp']:.1f}°F | "
+          f"Pressure: {refrigerant['pressure']} PSI | "
+          f"State: {refrigerant['state']}")
+
+    # Refrigerant rejects heat to outdoor air
+    # It can cool down to slightly above outdoor temp (approach temperature)
+    approach_temp = 10.0  # Degrees above outdoor temp
+
+    new_refrigerant = {
+        "temp": outdoor_temp + approach_temp,
+        "pressure": refrigerant["pressure"],  # Pressure stays high
+        "state": "liquid"  # Gas condenses to liquid
+    }
+
+    heat_rejected = refrigerant["temp"] - new_refrigerant["temp"]
+
+    print(f"     OUT ← Temp: {new_refrigerant['temp']:.1f}°F | "
+          f"Pressure: {new_refrigerant['pressure']} PSI | "
+          f"State: {new_refrigerant['state']}")
+    print(f"     Heat rejected: {heat_rejected:.1f}°F to outdoor air ({outdoor_temp}°F)")
+
+    return new_refrigerant</code></pre>
+    </section>
+
+    <section class="glass-card" id="expansion-valve">
+      <h2>💧 2.6 — Function 4: Expansion Valve</h2>
+      <p>
+        The expansion valve (or TXV/metering device) is a restriction point. High-pressure
+        liquid is forced through a tiny opening. Pressure drops instantly, and the refrigerant
+        becomes a cold, low-pressure mix — ready to absorb heat in the evaporator again.
+      </p>
+      <pre><code class="language-python">def expansion_valve(refrigerant):
+    """
+    Simulate the expansion valve (TXV / metering device).
+
+    Physics: High-pressure liquid passes through a small orifice.
+    Pressure drops dramatically (Bernoulli's principle).
+    Temperature drops with pressure (Joule-Thomson effect).
+    Refrigerant becomes cold, low-pressure liquid/gas mix.
+
+    Args:
+        refrigerant: dict with 'temp', 'pressure', 'state'
+
+    Returns:
+        dict: updated refrigerant state
+    """
+    print("  💧 EXPANSION VALVE:")
+    print(f"     IN  → Temp: {refrigerant['temp']:.1f}°F | "
+          f"Pressure: {refrigerant['pressure']} PSI | "
+          f"State: {refrigerant['state']}")
+
+    # Pressure drops through the orifice → temperature drops too
+    expansion_ratio = 6.0  # Inverse of compression ratio
+
+    new_refrigerant = {
+        "temp": 40.0,  # Drops to evaporator temperature (~40°F for R-410A)
+        "pressure": int(refrigerant["pressure"] / expansion_ratio),
+        "state": "liquid"  # Cold liquid, ready for evaporator
+    }
+
+    print(f"     OUT ← Temp: {new_refrigerant['temp']:.1f}°F | "
+          f"Pressure: {new_refrigerant['pressure']} PSI | "
+          f"State: {new_refrigerant['state']}")
+
+    return new_refrigerant</code></pre>
+    </section>
+
+    <!-- ── Running the Full Cycle ── -->
+    <section class="glass-card" id="full-cycle">
+      <h2>🔄 2.7 — Running the Complete AC Cycle</h2>
+      <p>
+        Now we chain all four functions together in a loop — just like the real refrigeration
+        cycle. The output of each function feeds into the next:
+      </p>
+      <pre><code class="language-python"># ═══ COMPLETE REFRIGERATION CYCLE SIMULATION ═══
+
+def run_ac_cycle(num_cycles=5, room_temp=85.0, outdoor_temp=95.0):
+    """
+    Run the full AC refrigeration cycle for a given number of cycles.
+
+    Args:
+        num_cycles: how many complete cycles to simulate
+        room_temp: starting indoor temperature in °F
+        outdoor_temp: outdoor temperature in °F
+    """
+    # Initial refrigerant state (cold liquid in the evaporator)
+    refrigerant = {
+        "temp": 40.0,
+        "pressure": 68,
+        "state": "liquid"
+    }
+
+    setpoint = 72.0
+
+    print(f"╔══════════════════════════════════════════════╗")
+    print(f"║     AC CYCLE SIMULATION                     ║")
+    print(f"║     Room: {room_temp}°F → Target: {setpoint}°F          ║")
+    print(f"║     Outdoor: {outdoor_temp}°F                        ║")
+    print(f"╚══════════════════════════════════════════════╝")
+    print()
+
+    for cycle in range(1, num_cycles + 1):
+        print(f"{'='*50}")
+        print(f"  CYCLE {cycle}")
+        print(f"{'='*50}")
+
+        # Step 1: Evaporator absorbs heat from room
+        refrigerant, room_temp = evaporator(refrigerant, room_temp)
+
+        # Step 2: Compressor squeezes the gas
+        refrigerant = compressor(refrigerant)
+
+        # Step 3: Condenser rejects heat outdoors
+        refrigerant = condenser(refrigerant, outdoor_temp)
+
+        # Step 4: Expansion valve drops pressure
+        refrigerant = expansion_valve(refrigerant)
+
+        print(f"\n  📊 After cycle {cycle}: Room = {room_temp:.1f}°F")
+
+        if room_temp <= setpoint:
+            print(f"\n  ✅ SETPOINT REACHED! Room is at {room_temp:.1f}°F")
+            break
+
+        print()
+
+    print(f"\n{'='*50}")
+    print(f"  SIMULATION COMPLETE")
+    print(f"  Final room temp: {room_temp:.1f}°F")
+    print(f"{'='*50}")
+
+# Run it!
+run_ac_cycle(num_cycles=10, room_temp=82.0, outdoor_temp=95.0)</code></pre>
+    </section>
+
+    <!-- ── Key Takeaways ── -->
+    <section class="glass-card">
+      <h2>🎯 Module 2 Key Takeaways</h2>
+      <ul class="takeaway-list">
+        <li><strong>Functions</strong> encapsulate a single unit of work — just like an AC component.</li>
+        <li><strong>Parameters</strong> are the inputs to a function — like refrigerant entering a component.</li>
+        <li><strong>Return values</strong> are the outputs — the transformed refrigerant state.</li>
+        <li><strong>Dictionaries</strong> bundle related data together with labeled keys.</li>
+        <li><strong>Function chaining</strong> = piping output to input = the refrigeration cycle.</li>
+        <li>Each function has a clear <strong>single responsibility</strong> — one component, one job.</li>
+      </ul>
+    </section>
+
+    <section class="glass-card cta-section">
+      <h2>Next Up: Module 3</h2>
+      <p>
+        Your AC simulation runs, but the data disappears when the program ends. In Module 3,
+        we'll log every sensor reading to a CSV file — just like a Building Automation System
+        logs trend data. You'll learn file I/O, the csv module, and context managers.
+      </p>
+      <a href="module_03_data_flow_logging.html" class="btn btn-primary btn-large">Continue to Module 3: Data Flow & Logging →</a>
+    </section>
+  </main>
+
+  <footer class="module-footer">
+    <div class="footer-nav">
+      <a href="module_01_python_basics.html" class="btn btn-nav btn-prev">← Module 1</a>
+      <span class="footer-module-indicator">Module 2 of 8</span>
+      <a href="module_03_data_flow_logging.html" class="btn btn-nav btn-next">Module 3 →</a>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="../static/js/app.js"></script>
+</body>
+</html>
