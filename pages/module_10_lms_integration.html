@@ -139,12 +139,27 @@
         In systems engineering, this is comparable to compiling a structural blueprint from layout notes.
         Python's built-in <code>ast</code> module allows us to inspect these node structures directly:
       </p>
-      <pre><code class="language-python">import ast
+      <pre><code class="language-python"># --- AST Parsing Engine Example ---
+print("==================================================")
+print("⚙️ STORY LOG: Accessing the compiler database...")
+print("==================================================")
+print("Narrative: Inside the academy training core, a grading")
+print("terminal awaits. Before executing your script, it compiles")
+print("the tokens to verify their syntax structure.")
+print("--------------------------------------------------")
 
-code_string = "x = 45"
+import ast
+code_string = "eev_steps = 250"
 tree = ast.parse(code_string)
+print("[AST] Parsing assignment operation node:")
 print(ast.dump(tree))
-# Output: Module(body=[Assign(targets=[Name(id='x', ctx=Store())], value=Constant(value=45))])</code></pre>
+
+print("--------------------------------------------------")
+print("💡 LEARNING OBJECTIVE: Discover how code strings compile")
+print("   into recursive trees representing data targets and values.")
+print("🎮 GAMEPLAY LINK: The automated compiler grading sandbox")
+print("   uses this mapping logic to inspect user achievements.")
+print("==================================================")</code></pre>
     </section>
 
     <!-- ── Section 2: Lexical Analysis ── -->
@@ -169,7 +184,17 @@ print(ast.dump(tree))
         We check if a `ClassDef` node named `AirConditioner` is present, and check if it contains a `FunctionDef`
         corresponding to `__init__`:
       </p>
-      <pre><code class="language-python"># AST Visitor pattern to validate code classes
+      <pre><code class="language-python"># --- AST Node Visitor Pattern Validator ---
+print("==================================================")
+print("🕵️ STORY LOG: Code Inspector Daemon")
+print("==================================================")
+print("Narrative: The system security engine starts up a")
+print("compilation daemon. It walks the code's parsed nodes")
+print("to check if the 'AirConditioner' class was defined.")
+print("--------------------------------------------------")
+
+import ast
+
 class HVACValidator(ast.NodeVisitor):
     def __init__(self):
         self.has_class = False
@@ -177,7 +202,21 @@ class HVACValidator(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         if node.name == "AirConditioner":
             self.has_class = True
-        self.generic_visit(node)</code></pre>
+            print(f"[DAEMON] Node MATCH: Found ClassDef named '{node.name}'")
+        self.generic_visit(node)
+
+# Simulate inspecting a student script AST
+sample_tree = ast.parse("class AirConditioner:\n    pass")
+validator = HVACValidator()
+validator.visit(sample_tree)
+print(f"[DAEMON] Scan completed. Class present? {validator.has_class}")
+
+print("--------------------------------------------------")
+print("💡 LEARNING OBJECTIVE: Create object-oriented NodeVisitor")
+print("   subclasses to search syntax nodes dynamically.")
+print("🎮 GAMEPLAY LINK: Resolving compile errors allows the robot")
+print("   to patch broken grid control circuits.")
+print("==================================================")</code></pre>
     </section>
 
     <!-- ── Section 4: Live Compiler Sandbox (Dashboard) ── -->
@@ -226,16 +265,46 @@ class AirConditioner:
         The automated LMS compiler grades assignments by assigning scores to node presence. Finding a class contributes 40 points,
         a constructor constructor parameters yields 30 points, and active functions add the remaining 30 points to score 100/100.
       </p>
-      <pre><code class="language-python"># Automated grading calculations
+      <pre><code class="language-python"># --- Grading Engine Score Calculation ---
+print("==================================================")
+print("📊 STORY LOG: Academy Progress Report")
+print("==================================================")
+print("Narrative: The final exam results are computed. Each")
+print("correct node found in your submission adds points to")
+print("your master engineer progression record.")
+print("--------------------------------------------------")
+
+class MockValidator:
+    def __init__(self):
+        self.has_class = True
+        self.has_init = True
+        self.has_update = False
+
 def compute_grade(validator):
     score = 0
+    print("[GRADING] Scoring components:")
     if validator.has_class:
         score += 40
+        print("  +40 pts: ClassDef 'AirConditioner' confirmed.")
     if validator.has_init:
         score += 30
+        print("  +30 pts: Constructor '__init__' confirmed.")
     if validator.has_update:
         score += 30
-    return score</code></pre>
+        print("  +30 pts: Update loop method confirmed.")
+    print(f"[GRADING] Cumulative Score: {score}/100")
+    return score
+
+# Score the validator
+val = MockValidator()
+compute_grade(val)
+
+print("--------------------------------------------------")
+print("💡 LEARNING OBJECTIVE: Apply weighted scoring values using")
+print("   conditional checks to evaluate variable structures.")
+print("🎮 GAMEPLAY LINK: The grade result translates to XP rewards")
+print("   gained by player characters in the mainframe database.")
+print("==================================================")</code></pre>
     </section>
 
     <!-- ── Section 6: Progress Writes ── -->
@@ -244,16 +313,29 @@ def compute_grade(validator):
       <p>
         Once verified, progress scores are written to the database (in local storage files) to sync grading reports.
       </p>
-      <pre><code class="language-python"># Log score status
+      <pre><code class="language-python"># --- Progress Write Database Operations ---
+print("==================================================")
+print("💾 STORY LOG: Synching Database Records")
+print("==================================================")
+print("Narrative: Connecting to local databases to record")
+print("the final certification. The grade writes are synchronized")
+print("to the mainframe command center.")
+print("--------------------------------------------------")
+
 def log_progress(student_id, module_id, grade):
-    import sqlite3
-    conn = sqlite3.connect("lms_grades.db")
-    conn.execute(
-        "INSERT INTO grades (student_id, module_id, score) VALUES (?, ?, ?)",
-        (student_id, module_id, grade)
-    )
-    conn.commit()
-    conn.close()</code></pre>
+    print(f"[SQL DB] Writing to table: grades")
+    print(f"[SQL DB] Executing: INSERT INTO grades VALUES ('{student_id}', {module_id}, {grade})")
+    print(f"[SQL DB] Transaction COMMITTED successfully.")
+
+# Mock db write
+log_progress("student_42", 10, 100)
+
+print("--------------------------------------------------")
+print("💡 LEARNING OBJECTIVE: Interact with transactional data layers")
+print("   to synchronize in-memory scores with persistent databases.")
+print("🎮 GAMEPLAY LINK: Grade saves commit directly to the global")
+print("   Command Center schema progress tables.")
+print("==================================================")</code></pre>
     </section>
 
     <!-- ── Key Takeaways ── -->
