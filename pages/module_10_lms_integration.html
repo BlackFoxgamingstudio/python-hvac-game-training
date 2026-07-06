@@ -140,13 +140,13 @@
         Python's built-in <code>ast</code> module allows us to inspect these node structures directly:
       </p>
       <pre><code class="language-python"># --- AST Parsing Engine Example ---
-print("==================================================")
-print("⚙️ STORY LOG: Accessing the compiler database...")
-print("==================================================")
-print("Narrative: Inside the academy training core, a grading")
-print("terminal awaits. Before executing your script, it compiles")
-print("the tokens to verify their syntax structure.")
-print("--------------------------------------------------")
+print("""==================================================
+⚙️ STORY LOG: Accessing the compiler database...
+==================================================
+Narrative: Inside the academy training core, a grading
+terminal awaits. Before executing your script, it compiles
+the tokens to verify their syntax structure.
+--------------------------------------------------""")
 
 import ast
 code_string = "eev_steps = 250"
@@ -154,12 +154,12 @@ tree = ast.parse(code_string)
 print("[AST] Parsing assignment operation node:")
 print(ast.dump(tree))
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Discover how code strings compile")
-print("   into recursive trees representing data targets and values.")
-print("🎮 GAMEPLAY LINK: The automated compiler grading sandbox")
-print("   uses this mapping logic to inspect user achievements.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Discover how code strings compile
+   into recursive trees representing data targets and values.
+🎮 GAMEPLAY LINK: The automated compiler grading sandbox
+   uses this mapping logic to inspect user achievements.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Section 2: Lexical Analysis ── -->
@@ -185,13 +185,13 @@ print("==================================================")</code></pre>
         corresponding to `__init__`:
       </p>
       <pre><code class="language-python"># --- AST Node Visitor Pattern Validator ---
-print("==================================================")
-print("🕵️ STORY LOG: Code Inspector Daemon")
-print("==================================================")
-print("Narrative: The system security engine starts up a")
-print("compilation daemon. It walks the code's parsed nodes")
-print("to check if the 'AirConditioner' class was defined.")
-print("--------------------------------------------------")
+print("""==================================================
+🕵️ STORY LOG: Code Inspector Daemon
+==================================================
+Narrative: The system security engine starts up a
+compilation daemon. It walks the code's parsed nodes
+to check if the 'AirConditioner' class was defined.
+--------------------------------------------------""")
 
 import ast
 
@@ -211,12 +211,12 @@ validator = HVACValidator()
 validator.visit(sample_tree)
 print(f"[DAEMON] Scan completed. Class present? {validator.has_class}")
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Create object-oriented NodeVisitor")
-print("   subclasses to search syntax nodes dynamically.")
-print("🎮 GAMEPLAY LINK: Resolving compile errors allows the robot")
-print("   to patch broken grid control circuits.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Create object-oriented NodeVisitor
+   subclasses to search syntax nodes dynamically.
+🎮 GAMEPLAY LINK: Resolving compile errors allows the robot
+   to patch broken grid control circuits.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Section 4: Live Compiler Sandbox (Dashboard) ── -->
@@ -266,13 +266,13 @@ class AirConditioner:
         a constructor constructor parameters yields 30 points, and active functions add the remaining 30 points to score 100/100.
       </p>
       <pre><code class="language-python"># --- Grading Engine Score Calculation ---
-print("==================================================")
-print("📊 STORY LOG: Academy Progress Report")
-print("==================================================")
-print("Narrative: The final exam results are computed. Each")
-print("correct node found in your submission adds points to")
-print("your master engineer progression record.")
-print("--------------------------------------------------")
+print("""==================================================
+📊 STORY LOG: Academy Progress Report
+==================================================
+Narrative: The final exam results are computed. Each
+correct node found in your submission adds points to
+your master engineer progression record.
+--------------------------------------------------""")
 
 class MockValidator:
     def __init__(self):
@@ -299,12 +299,12 @@ def compute_grade(validator):
 val = MockValidator()
 compute_grade(val)
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Apply weighted scoring values using")
-print("   conditional checks to evaluate variable structures.")
-print("🎮 GAMEPLAY LINK: The grade result translates to XP rewards")
-print("   gained by player characters in the mainframe database.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Apply weighted scoring values using
+   conditional checks to evaluate variable structures.
+🎮 GAMEPLAY LINK: The grade result translates to XP rewards
+   gained by player characters in the mainframe database.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Section 6: Progress Writes ── -->
@@ -314,13 +314,13 @@ print("==================================================")</code></pre>
         Once verified, progress scores are written to the database (in local storage files) to sync grading reports.
       </p>
       <pre><code class="language-python"># --- Progress Write Database Operations ---
-print("==================================================")
-print("💾 STORY LOG: Synching Database Records")
-print("==================================================")
-print("Narrative: Connecting to local databases to record")
-print("the final certification. The grade writes are synchronized")
-print("to the mainframe command center.")
-print("--------------------------------------------------")
+print("""==================================================
+💾 STORY LOG: Synching Database Records
+==================================================
+Narrative: Connecting to local databases to record
+the final certification. The grade writes are synchronized
+to the mainframe command center.
+--------------------------------------------------""")
 
 def log_progress(student_id, module_id, grade):
     print(f"[SQL DB] Writing to table: grades")
@@ -330,12 +330,12 @@ def log_progress(student_id, module_id, grade):
 # Mock db write
 log_progress("student_42", 10, 100)
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Interact with transactional data layers")
-print("   to synchronize in-memory scores with persistent databases.")
-print("🎮 GAMEPLAY LINK: Grade saves commit directly to the global")
-print("   Command Center schema progress tables.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Interact with transactional data layers
+   to synchronize in-memory scores with persistent databases.
+🎮 GAMEPLAY LINK: Grade saves commit directly to the global
+   Command Center schema progress tables.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Key Takeaways ── -->

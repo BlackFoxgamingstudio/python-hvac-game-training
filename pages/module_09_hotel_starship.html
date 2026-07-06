@@ -154,13 +154,13 @@
         To model this system in Python, we represent the decks as dictionary collections mapping sensor inputs to telemetry readings:
       </p>
       <pre><code class="language-python"># --- Starship Deck Collections Registry ---
-print("==================================================")
-print("🛰️ STORY LOG: Welcome Aboard S.S. Sovereign!")
-print("==================================================")
-print("Narrative: As Apprentice Tech Jaxon, you start your shift")
-print("on Deck 3. Red alarms are blinking. Decks are isolated.")
-print("To fix the climate loops, you must map the deck topology.")
-print("--------------------------------------------------")
+print("""==================================================
+🛰️ STORY LOG: Welcome Aboard S.S. Sovereign!
+==================================================
+Narrative: As Apprentice Tech Jaxon, you start your shift
+on Deck 3. Red alarms are blinking. Decks are isolated.
+To fix the climate loops, you must map the deck topology.
+--------------------------------------------------""")
 
 decks = {
     "deck_1": {"name": "Command Bridge", "volume_cfm": 450, "temp_target": 70.0, "rank_required": "Command"},
@@ -173,12 +173,12 @@ for d_id, data in decks.items():
     print(f"   Required Rank: {data['rank_required']} clearance level")
     print(f"   Target limits: {data['temp_target']}°F | Baseline flow: {data['volume_cfm']} CFM")
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Understand structural mapping of")
-print("   hardware physical zones using nested dictionary collections.")
-print("🎮 GAMEPLAY LINK: The player character is blocked from accessing")
-print("   higher decks until their guild rank token is updated.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Understand structural mapping of
+   hardware physical zones using nested dictionary collections.
+🎮 GAMEPLAY LINK: The player character is blocked from accessing
+   higher decks until their guild rank token is updated.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Section 2: Passenger Ranks ── -->
@@ -221,13 +221,13 @@ print("==================================================")</code></pre>
         In code, this authorization gate checks user credentials before modifying the cooling capacity variables:
       </p>
       <pre><code class="language-python"># --- Rank Check Authorization Logic ---
-print("==================================================")
-print("🔑 STORY LOG: Interstellar Airflow Gatekeeper")
-print("==================================================")
-print("Narrative: You stand before the terminal of the First")
-print("Class deck. The diplomat's suites are overheating. You")
-print("must verify your authorization token before opening the VAV valves.")
-print("--------------------------------------------------")
+print("""==================================================
+🔑 STORY LOG: Interstellar Airflow Gatekeeper
+==================================================
+Narrative: You stand before the terminal of the First
+Class deck. The diplomat's suites are overheating. You
+must verify your authorization token before opening the VAV valves.
+--------------------------------------------------""")
 
 def check_authorization(user_rank, target_deck_rank):
     ranks_hierarchy = {"Crew": 1, "First Class": 2, "Command": 3}
@@ -242,12 +242,12 @@ def check_authorization(user_rank, target_deck_rank):
 check_authorization("Crew", "First Class")
 check_authorization("Command", "First Class")
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Compare data privileges using hierarchies")
-print("   implemented through dictionary mappings and conditional operators.")
-print("🎮 GAMEPLAY LINK: Unlocking VIP rooms to repair leaking coolant")
-print("   loops requires upgrading your badge to the 'First Class' tier.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Compare data privileges using hierarchies
+   implemented through dictionary mappings and conditional operators.
+🎮 GAMEPLAY LINK: Unlocking VIP rooms to repair leaking coolant
+   loops requires upgrading your badge to the 'First Class' tier.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Section 3: Propulsion Bay ── -->
@@ -261,13 +261,13 @@ print("==================================================")</code></pre>
         Let's write a python function to compute the cooling threshold constraints:
       </p>
       <pre><code class="language-python"># --- Propulsion Bay Thermal Cycle Analysis ---
-print("==================================================")
-print("🔥 STORY LOG: Propulsion Core Thermal Cascade")
-print("==================================================")
-print("Narrative: The fusion reactors on Deck 3 are running hot.")
-print("Coolant flow sensors are flickering. If the airflow speed")
-print("drops below the critical limits, a meltdown starts.")
-print("--------------------------------------------------")
+print("""==================================================
+🔥 STORY LOG: Propulsion Core Thermal Cascade
+==================================================
+Narrative: The fusion reactors on Deck 3 are running hot.
+Coolant flow sensors are flickering. If the airflow speed
+drops below the critical limits, a meltdown starts.
+--------------------------------------------------""")
 
 def evaluate_propulsion_status(airflow_cfm):
     if airflow_cfm < 300:
@@ -284,12 +284,12 @@ evaluate_propulsion_status(600)
 evaluate_propulsion_status(420)
 evaluate_propulsion_status(250)
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Learn boundary limit testing and")
-print("   multi-stage conditional flow checks to handle sensor anomalies.")
-print("🎮 GAMEPLAY LINK: If status is 'CRITICAL OVERHEAT', red warning lights")
-print("   blink on the game canvas, and CO2 limits start counting down.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Learn boundary limit testing and
+   multi-stage conditional flow checks to handle sensor anomalies.
+🎮 GAMEPLAY LINK: If status is 'CRITICAL OVERHEAT', red warning lights
+   blink on the game canvas, and CO2 limits start counting down.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Section 4: Interactive Board (Dashboard) ── -->
@@ -373,13 +373,13 @@ print("==================================================")</code></pre>
         Security systems mandate that command tokens remain cryptographically verified. If a student inputs a token that does not resolve correctly, the simulation locks down the EEV controls.
       </p>
       <pre><code class="language-python"># --- Security Token Cryptographic Gateway ---
-print("==================================================")
-print("🛡️ STORY LOG: Gateway Credentials Resolution")
-print("==================================================")
-print("Narrative: A mysterious technician presents a badge token.")
-print("Is it a cargo crew specialist, or an imposter attempting")
-print("to breach the Command Deck thermal controls?")
-print("--------------------------------------------------")
+print("""==================================================
+🛡️ STORY LOG: Gateway Credentials Resolution
+==================================================
+Narrative: A mysterious technician presents a badge token.
+Is it a cargo crew specialist, or an imposter attempting
+to breach the Command Deck thermal controls?
+--------------------------------------------------""")
 
 class SecurityGateway:
     def __init__(self):
@@ -395,12 +395,12 @@ gateway = SecurityGateway()
 gateway.resolve_rank("PASS_VIP_12")
 gateway.resolve_rank("BAD_TOKEN_99")
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Create class structures containing registry")
-print("   lookups to validate inputs against cryptographic strings.")
-print("🎮 GAMEPLAY LINK: The player checks security nodes using their")
-print("   inventory items to bypass security blast doors.")
-print("==================================================")</code></pre>
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Create class structures containing registry
+   lookups to validate inputs against cryptographic strings.
+🎮 GAMEPLAY LINK: The player checks security nodes using their
+   inventory items to bypass security blast doors.
+==================================================""")</code></pre>
     </section>
 
     <!-- ── Section 6: Putting It All Together ── -->
@@ -410,12 +410,12 @@ print("==================================================")</code></pre>
         In the starship, thermal loads dynamically correlate to deck levels. Write a Python class `StarshipHVAC` that handles rank authorizations:
       </p>
       <pre><code class="language-python"># --- Complete Starship HVAC Controls Class ---
-print("==================================================")
-print("🚀 STORY LOG: Complete System Integration")
-print("==================================================")
-print("Narrative: The captain demands immediate temperature drops on the Bridge.")
-print("You initiate the master HVAC controller class, applying the rank locks.")
-print("--------------------------------------------------")
+print("""==================================================
+🚀 STORY LOG: Complete System Integration
+==================================================
+Narrative: The captain demands immediate temperature drops on the Bridge.
+You initiate the master HVAC controller class, applying the rank locks.
+--------------------------------------------------""")
 
 class StarshipHVAC:
     def __init__(self, rank: str):
@@ -446,12 +446,12 @@ hvac_sys.adjust_cooling(600)  # Fails
 admin_sys = StarshipHVAC("Command")
 admin_sys.adjust_cooling(700)  # Succeeds
 
-print("--------------------------------------------------")
-print("💡 LEARNING OBJECTIVE: Integrate variables, loops, conditionals,")
-print("   and object properties within one cohesive systems controller class.")
-print("🎮 GAMEPLAY LINK: The final boss fight on Deck 3 requires instantiating")
-print("   this class with correct tokens to prevent containment shield failure.")
-print("==================================================")
+print("""--------------------------------------------------
+💡 LEARNING OBJECTIVE: Integrate variables, loops, conditionals,
+   and object properties within one cohesive systems controller class.
+🎮 GAMEPLAY LINK: The final boss fight on Deck 3 requires instantiating
+   this class with correct tokens to prevent containment shield failure.
+==================================================""")
 </code></pre>
     </section>
 
