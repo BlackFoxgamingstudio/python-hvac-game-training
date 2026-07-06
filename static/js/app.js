@@ -16,7 +16,7 @@
 
   // --- Constants ---
   const STORAGE_KEY = 'python_training_progress';
-  const TOTAL_MODULES = 8;
+  const TOTAL_MODULES = 10;
 
   // =============================================
   //  Pyodide (In-Browser Python) Integration
