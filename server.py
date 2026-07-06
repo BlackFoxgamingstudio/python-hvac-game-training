@@ -222,6 +222,8 @@ class TrainingServerHandler(SimpleHTTPRequestHandler):
             {"id": 6, "slug": "module_06_diagnostic_troubleshooting", "title": "Diagnostic Troubleshooting", "subtitle": "AI-Powered Analysis"},
             {"id": 7, "slug": "module_07_game_programming", "title": "Game Programming", "subtitle": "Pygame & Game Objects"},
             {"id": 8, "slug": "module_08_final_project", "title": "Final Project", "subtitle": "Complete Robot Simulation"},
+            {"id": 9, "slug": "module_09_hotel_starship", "title": "Hotel Starship Controls", "subtitle": "Rank-Based Sector HVAC"},
+            {"id": 10, "slug": "module_10_lms_integration", "title": "LMS Compiler & AST Sandbox", "subtitle": "Automated AST Validation"},
         ]
         data = json.dumps(modules).encode("utf-8")
         self.send_response(200)

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" data-module="9">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 9 — Hotel Starship Controls | Python Systems Thinking</title>
+  <meta name="description" content="Simulate HVAC controls on the S.S. Sovereign Starship: floor level sectors, rank-based authorization, and boss-level temperature control logic.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/style.css">
+  <style>
+    .starship-map-container {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: var(--space-lg);
+      margin-top: var(--space-md);
+    }
+    .decks-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .deck-card {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--border-radius-md);
+      padding: var(--space-md);
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    .deck-card:hover, .deck-card.active {
+      border-color: var(--accent-cyan);
+      background: rgba(34, 211, 238, 0.05);
+      box-shadow: 0 0 15px rgba(34,211,238,0.15);
+    }
+    .deck-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-xs);
+    }
+    .deck-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .deck-rank {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .rank-first { background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; }
+    .rank-crew { background: rgba(54, 162, 235, 0.15); border: 1px solid #36a2eb; color: #36a2eb; }
+    .rank-cmd { background: rgba(255, 99, 132, 0.15); border: 1px solid #ff6384; color: #ff6384; }
+    
+    .panel-display {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--border-radius-md);
+      padding: var(--space-md);
+      background: rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+    .metric-box {
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--border-radius-sm);
+      padding: var(--space-sm);
+      text-align: center;
+      background: rgba(255,255,255,0.01);
+    }
+    .metric-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-top: 4px;
+    }
+    .control-actions {
+      border-top: 1px dashed rgba(255,255,255,0.1);
+      padding-top: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .slider-control {
+      width: 60%;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="nav-icon">⚙️</span>
+      <a href="index.html" class="nav-title">Python Systems Thinking</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="module_01_python_basics.html" class="nav-link">Module 1</a>
+      <a href="module_02_hvac_functions.html" class="nav-link">Module 2</a>
+      <a href="module_03_data_flow_logging.html" class="nav-link">Module 3</a>
+      <a href="module_04_oop_refactor.html" class="nav-link">Module 4</a>
+      <a href="module_05_api_ai_integration.html" class="nav-link">Module 5</a>
+      <a href="module_06_diagnostic_troubleshooting.html" class="nav-link">Module 6</a>
+      <a href="module_07_game_programming.html" class="nav-link">Module 7</a>
+      <a href="module_08_final_project.html" class="nav-link">Module 8</a>
+      <a href="module_09_hotel_starship.html" class="nav-link active">Module 9</a>
+      <a href="module_10_lms_integration.html" class="nav-link">Module 10</a>
+    </div>
+  </nav>
+
+  <header class="module-hero">
+    <div class="hero-content">
+      <div class="hero-badge">Module 9 of 10 — Extension</div>
+      <h1>Hotel Starship Controls</h1>
+      <p class="hero-subtitle">Rank-Based Sector HVAC Simulator</p>
+      <p class="hero-description">
+        Ascend to the stars in the S.S. Sovereign Starship! In this module, you will manage
+        temperature distribution across three major decks under rank-based access locks, keeping
+        the crew quarters, first class suites, and propulsion bay operations cool.
+      </p>
+    </div>
+  </header>
+
+  <main class="module-content">
+
+    <!-- ── Interactive Starship HVAC Panel ── -->
+    <section class="glass-card" id="starship-panel">
+      <h2>🛸 9.1 — Starship Telemetry & Sectors Board</h2>
+      <p>
+        Click on different decks below to authorize controls, observe sector parameters, and update the thermal loads using rank checks.
+      </p>
+
+      <div class="starship-map-container">
+        <!-- Decks List -->
+        <div class="decks-list">
+          <div class="deck-card active" onclick="selectDeck('cmd')" id="deck-cmd">
+            <div class="deck-header">
+              <span class="deck-title">Deck 1: Command Bridge</span>
+              <span class="deck-rank rank-cmd">Command</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Handles vital nav arrays and master computers.</p>
+          </div>
+
+          <div class="deck-card" onclick="selectDeck('first')" id="deck-first">
+            <div class="deck-header">
+              <span class="deck-title">Deck 2: Passenger Suites</span>
+              <span class="deck-rank rank-first">First Class</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Luxury quarters for VIP diplomatic delegates.</p>
+          </div>
+
+          <div class="deck-card" onclick="selectDeck('crew')" id="deck-crew">
+            <div class="deck-header">
+              <span class="deck-title">Deck 3: Propulsion Bay</span>
+              <span class="deck-rank rank-crew">Crew</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Fusion engines running high thermal cycles.</p>
+          </div>
+        </div>
+
+        <!-- Telemetry Panel -->
+        <div class="panel-display">
+          <div>
+            <h3 style="margin-bottom: var(--space-md); border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: var(--space-xs);" id="panel-deck-title">Deck 1: Command Bridge</h3>
+            <div class="metric-grid">
+              <div class="metric-box">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">SECTOR TEMP</span>
+                <div class="metric-val" id="val-temp">70.2°F</div>
+              </div>
+              <div class="metric-box">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">AIR PRESS</span>
+                <div class="metric-val" id="val-press">14.7 PSI</div>
+              </div>
+              <div class="metric-box">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">AIRFLOW SPEED</span>
+                <div class="metric-val" id="val-flow">450 CFM</div>
+              </div>
+              <div class="metric-box">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">STATUS</span>
+                <div class="metric-val" id="val-status" style="color: var(--accent-green);">NOMINAL</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Actions -->
+          <div class="control-actions">
+            <div class="control-row">
+              <span style="font-size: 0.85rem; font-weight: bold; color: #fff;">Cooling Fan Speed:</span>
+              <input type="range" min="100" max="800" value="450" class="slider-control" id="fan-slider" oninput="adjustFan(this.value)">
+            </div>
+            <div class="control-row" style="margin-top: 10px;">
+              <span style="font-size: 0.85rem; font-weight: bold; color: #fff;">Authorization Token:</span>
+              <span id="auth-status" style="font-size: 0.8rem; font-weight: bold; color: var(--accent-cyan);">VERIFIED ✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Programming Section ── -->
+    <section class="glass-card" id="starship-exercise">
+      <h2>🛸 9.2 — Starship HVAC Python Exercise</h2>
+      <p>
+        In the starship, thermal loads dynamically correlate to deck levels. Write a Python class `StarshipHVAC` that handles rank authorizations:
+      </p>
+      <pre><code class="language-python">class StarshipHVAC:
+    def __init__(self, rank: str):
+        self.rank = rank  # 'Command' | 'First Class' | 'Crew'
+        self.airflow_cfm = 300
+        
+    def adjust_cooling(self, target_cfm: int) -> bool:
+        # Command rank can adjust anything.
+        # First class can adjust between 100 and 500.
+        # Crew can adjust up to 400 CFM in the engineering bay.
+        if self.rank == 'Command':
+            self.airflow_cfm = target_cfm
+            return True
+        elif self.rank == 'First Class' and 100 <= target_cfm <= 500:
+            self.airflow_cfm = target_cfm
+            return True
+        elif self.rank == 'Crew' and target_cfm <= 400:
+            self.airflow_cfm = target_cfm
+            return True
+        return False
+</code></pre>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script>
+    const deckData = {
+      cmd: {
+        title: 'Deck 1: Command Bridge',
+        temp: '70.2°F',
+        press: '14.7 PSI',
+        flow: '450 CFM',
+        status: 'NOMINAL',
+        statusColor: 'var(--accent-green)',
+        auth: 'VERIFIED ✓',
+        authColor: 'var(--accent-cyan)',
+        sliderVal: 450
+      },
+      first: {
+        title: 'Deck 2: Passenger Suites',
+        temp: '72.5°F',
+        press: '14.6 PSI',
+        flow: '320 CFM',
+        status: 'NOMINAL',
+        statusColor: 'var(--accent-green)',
+        auth: 'VERIFIED ✓',
+        authColor: 'var(--accent-cyan)',
+        sliderVal: 320
+      },
+      crew: {
+        title: 'Deck 3: Propulsion Bay',
+        temp: '88.4°F',
+        press: '14.9 PSI',
+        flow: '600 CFM',
+        status: 'HIGH LOAD',
+        statusColor: 'var(--accent-red)',
+        auth: 'INSUFFICIENT RANK ✕',
+        authColor: 'var(--accent-red)',
+        sliderVal: 600
+      }
+    };
+
+    let activeDeck = 'cmd';
+
+    function selectDeck(deckId) {
+      activeDeck = deckId;
+      document.querySelectorAll('.deck-card').forEach(card => {
+        card.classList.remove('active');
+      });
+      document.getElementById(`deck-${deckId}`).classList.add('active');
+
+      const data = deckData[deckId];
+      document.getElementById('panel-deck-title').innerText = data.title;
+      document.getElementById('val-temp').innerText = data.temp;
+      document.getElementById('val-press').innerText = data.press;
+      document.getElementById('val-flow').innerText = data.flow;
+      document.getElementById('val-status').innerText = data.status;
+      document.getElementById('val-status').style.color = data.statusColor;
+      document.getElementById('auth-status').innerText = data.auth;
+      document.getElementById('auth-status').style.color = data.authColor;
+      document.getElementById('fan-slider').value = data.sliderVal;
+      
+      if (deckId === 'crew') {
+        document.getElementById('fan-slider').disabled = true;
+      } else {
+        document.getElementById('fan-slider').disabled = false;
+      }
+    }
+
+    function adjustFan(val) {
+      if (activeDeck === 'crew') return;
+      deckData[activeDeck].sliderVal = val;
+      deckData[activeDeck].flow = val + ' CFM';
+      document.getElementById('val-flow').innerText = val + ' CFM';
+    }
+  </script>
+</body>
+</html>
