@@ -127,9 +127,62 @@
 
   <main class="module-content">
 
-    <!-- ── Sandbox Section ── -->
+    <!-- ── Section 1: AST Basics ── -->
+    <section class="glass-card" id="ast-basics">
+      <h2>🖥️ 10.1 — AST Basics: Abstracting Python Syntax</h2>
+      <p>
+        Before Python runs code, it translates raw characters into a structural tree called an 
+        <strong>Abstract Syntax Tree (AST)</strong>. The AST represents the logical nodes of the syntax — classes,
+        functions, variable assignments, loops, and conditions — discarding whitespace and comments.
+      </p>
+      <p>
+        In systems engineering, this is comparable to compiling a structural blueprint from layout notes.
+        Python's built-in <code>ast</code> module allows us to inspect these node structures directly:
+      </p>
+      <pre><code class="language-python">import ast
+
+code_string = "x = 45"
+tree = ast.parse(code_string)
+print(ast.dump(tree))
+# Output: Module(body=[Assign(targets=[Name(id='x', ctx=Store())], value=Constant(value=45))])</code></pre>
+    </section>
+
+    <!-- ── Section 2: Lexical Analysis ── -->
+    <section class="glass-card" id="lexical-analysis">
+      <h2>🖥️ 10.2 — Lexical Analysis: Breaking Down Tokens</h2>
+      <p>
+        Compilation starts with <strong>Lexing (Tokenization)</strong>. The compiler scans characters and groups them
+        into syntax tokens — like keywords (<code>class</code>, <code>def</code>), operators (<code>+</code>, <code>=</code>),
+        and identifiers.
+      </p>
+      <p>
+        If the lexer encounters invalid sequences (such as mismatched parentheses or invalid string quotes),
+        it throws a tokenization error before the program can parse structural blocks.
+      </p>
+    </section>
+
+    <!-- ── Section 3: Syntax Validation ── -->
+    <section class="glass-card" id="syntax-validation">
+      <h2>🖥️ 10.3 — Syntax Validation: Class Defs and Init Methods</h2>
+      <p>
+        In our grading loop, we validate that students declare the class structures correctly.
+        We check if a `ClassDef` node named `AirConditioner` is present, and check if it contains a `FunctionDef`
+        corresponding to `__init__`:
+      </p>
+      <pre><code class="language-python"># AST Visitor pattern to validate code classes
+class HVACValidator(ast.NodeVisitor):
+    def __init__(self):
+        self.has_class = False
+        
+    def visit_ClassDef(self, node):
+        if node.name == "AirConditioner":
+            self.has_class = True
+        self.generic_visit(node)</code></pre>
+    </section>
+
+    <!-- ── Section 4: Live Compiler Sandbox (Dashboard) ── -->
     <section class="glass-card" id="sandbox-workspace">
-      <h2>🖥️ 10.1 — Live AST Compiler Sandbox</h2>
+      <h2>🖥️ 10.4 — Live AST Compiler Sandbox</h2>
       <p>
         Modify the Python code inside the workspace editor, then click **COMPILE & GRADE CODE** to parse the syntax tree.
       </p>
@@ -164,6 +217,60 @@ class AirConditioner:
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- ── Section 5: Grading Engine ── -->
+    <section class="glass-card" id="grading-engine">
+      <h2>🖥️ 10.5 — Grading Engine: Scoring and Metrics Verification</h2>
+      <p>
+        The automated LMS compiler grades assignments by assigning scores to node presence. Finding a class contributes 40 points,
+        a constructor constructor parameters yields 30 points, and active functions add the remaining 30 points to score 100/100.
+      </p>
+      <pre><code class="language-python"># Automated grading calculations
+def compute_grade(validator):
+    score = 0
+    if validator.has_class:
+        score += 40
+    if validator.has_init:
+        score += 30
+    if validator.has_update:
+        score += 30
+    return score</code></pre>
+    </section>
+
+    <!-- ── Section 6: Progress Writes ── -->
+    <section class="glass-card" id="progress-writes">
+      <h2>🖥️ 10.6 — Progress Writes: Committing to Database Tables</h2>
+      <p>
+        Once verified, progress scores are written to the database (in local storage files) to sync grading reports.
+      </p>
+      <pre><code class="language-python"># Log score status
+def log_progress(student_id, module_id, grade):
+    import sqlite3
+    conn = sqlite3.connect("lms_grades.db")
+    conn.execute(
+        "INSERT INTO grades (student_id, module_id, score) VALUES (?, ?, ?)",
+        (student_id, module_id, grade)
+    )
+    conn.commit()
+    conn.close()</code></pre>
+    </section>
+
+    <!-- ── Key Takeaways ── -->
+    <section class="glass-card" id="takeaways">
+      <h2>🎯 Module 10 Key Takeaways</h2>
+      <ul>
+        <li><strong>AST:</strong> Trees map semantic nodes (classes, expressions, targets) from text inputs.</li>
+        <li><strong>Compilation:</strong> Parsing syntax structures compiles raw lines to executable modules.</li>
+        <li><strong>Database Sync:</strong> Local scores write automatically to preserve grading checkpoints.</li>
+      </ul>
+    </section>
+
+    <!-- ── Completion Card ── -->
+    <section class="glass-card" style="text-align: center; background: linear-gradient(135deg, rgba(34,211,238,0.1) 0%, rgba(255,255,255,0.02) 100%); border-color: var(--accent-cyan);">
+      <h2>🎓 Congratulations! You have completed Python Systems Thinking!</h2>
+      <p style="margin-top: var(--space-sm);">You have successfully completed all 10 modules in the syllabus. You can now build, simulate, diagnose, and compile advanced control systems in Python.</p>
+      <a href="index.html" class="btn" style="display: inline-block; margin-top: var(--space-md);">GO TO COURSE HOME</a>
     </section>
 
   </main>
