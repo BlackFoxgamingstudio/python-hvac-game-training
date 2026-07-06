@@ -80,6 +80,14 @@ Below is the verified diagnostic interface calibration showing prompt vector ver
 
 ---
 
+## 🖼️ Visual Calibration Snapshot (AI-003)
+
+Below is the verified diagnostic interface calibration showing prompt vector verification for EEV feedback loops:
+
+![AI-003 Prompt Vector Calibration](../static/images/snapshots/ai_003_screenshot.jpg)
+
+---
+
 ## 📝 Diagnostic Persona Instructions
 
 ### 1. Tone and Structural Constraints

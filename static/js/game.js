@@ -89,6 +89,9 @@
       this.crankcaseHeaterActive = true;
       this.heaterCycles = 1;
       this.prevRunningState = false;
+      
+      // EEV Stepper Motor State
+      this.eevSteps = 250;
 
       // Live pressures and temperatures (Equalized at startup)
       this.suctionPressure = 150;
@@ -165,6 +168,15 @@
         this.evaporatorTemp += (24.0 - this.evaporatorTemp) * 0.08; // Coil freezes
         this.condenserTemp += (80.0 - this.condenserTemp) * 0.08;
         this.deltaT += (4.0 + noise * 0.1 - this.deltaT) * 0.08;
+      }
+
+      // EEV steps logic
+      if (this.faultMode !== 'STUCK_VALVE') {
+        const shError = this.superheat - 10.0;
+        this.eevSteps += Math.round(shError * 1.5);
+        this.eevSteps = Math.max(80, Math.min(480, this.eevSteps));
+      } else {
+        this.eevSteps = 50;
       }
 
       return Math.max(65.0, currentTemp - this.coolingPower);
@@ -359,7 +371,8 @@
         cond_temp: Number(this.ac.condenserTemp.toFixed(1)),
         delta_t: Number(this.ac.deltaT.toFixed(1)),
         crankcase_heater: this.ac.crankcaseHeaterActive,
-        heater_cycles: this.ac.heaterCycles
+        heater_cycles: this.ac.heaterCycles,
+        eev_steps: this.ac.eevSteps
       };
     }
   }
@@ -716,7 +729,8 @@
 
     let npcs = [
       new NPC('NPC-001', 'Agent Clog-001', 220, H - 120 - 44, 'BAS Guild', 'NPC-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.'),
-      new NPC('NPC-002', 'Agent Clog-002', 380, H - 120 - 44, 'Refrigeration Scholars', 'AI-002 establishes the process where to avoid liquid slugback hazards occurs by tracking the crankcase heater activation cycle.')
+      new NPC('NPC-002', 'Agent Clog-002', 380, H - 120 - 44, 'Refrigeration Scholars', 'AI-002 establishes the process where to avoid liquid slugback hazards occurs by tracking the crankcase heater activation cycle.'),
+      new NPC('NPC-003', 'Agent Clog-003', 540, H - 120 - 44, 'BAS Guild', 'AI-003 configures the engine to evaluates the suction line superheat so that it is possible to open stuck expansion valve steps.')
     ];
 
     // Key handlers

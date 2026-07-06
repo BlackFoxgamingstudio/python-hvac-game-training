@@ -343,6 +343,7 @@
           <div class="vector-tabs">
             <button class="tab-btn active" onclick="loadVector('AI-001')">AI-001</button>
             <button class="tab-btn" onclick="loadVector('AI-002')">AI-002</button>
+            <button class="tab-btn" onclick="loadVector('AI-003')">AI-003</button>
           </div>
         </div>
 
@@ -481,6 +482,24 @@
         load: '12.5% (LOW)',
         cycles: '482,109 (ACT)',
         glowText: 'ACTIVE / SAFE'
+      },
+      'AI-003': {
+        valTitle: 'AI-003 VALIDATION [OK]',
+        pmptVec: 'EEV_FEEDBACK_CONTROL',
+        description: 'AI-003 configures the engine to evaluates the suction line superheat so that it is possible to open stuck expansion valve steps.',
+        status: 'SUCCESS',
+        needleAngle: '52deg',
+        dashOffset: '180',
+        gaugeTitle: 'EEV STEP POSITION',
+        dynamicHtml: `
+          <div class="log-line" style="margin-top: 20px;">:: STEPPING_MOTOR: <span class="log-val">ACTIVE (STANDBY)</span></div>
+          <div class="log-line">:: EEV_STEPS_NOMINAL: <span class="log-val">250 STEPS</span></div>
+          <div class="log-line">:: SH_TARGET: <span class="log-val">10.0°F (SET)</span></div>
+        `,
+        temp: '41.5°C (NOM)',
+        load: '54.2% (ACT)',
+        cycles: '1,280,412 (ACT)',
+        glowText: 'CALIBRATED'
       }
     };
 
