@@ -344,6 +344,7 @@
             <button class="tab-btn active" onclick="loadVector('AI-001')">AI-001</button>
             <button class="tab-btn" onclick="loadVector('AI-002')">AI-002</button>
             <button class="tab-btn" onclick="loadVector('AI-003')">AI-003</button>
+            <button class="tab-btn" onclick="loadVector('AI-004')">AI-004</button>
           </div>
         </div>
 
@@ -500,6 +501,24 @@
         load: '54.2% (ACT)',
         cycles: '1,280,412 (ACT)',
         glowText: 'CALIBRATED'
+      },
+      'AI-004': {
+        valTitle: 'AI-004 VALIDATION [OK]',
+        pmptVec: 'PIPING_FLOW_INDICATORS',
+        description: 'AI-004 maps where red-blue piping indicator flows is updated during inspectsing cycles to map thermal zone gradients.',
+        status: 'SUCCESS',
+        needleAngle: '84deg',
+        dashOffset: '70',
+        gaugeTitle: 'GRADIENT FLOW CAPACITY',
+        dynamicHtml: `
+          <div class="log-line" style="margin-top: 20px;">:: COLD_VAPOR_LINE: <span class="log-val">ACTIVE / FLOWING (CYAN)</span></div>
+          <div class="log-line">:: HOT_LIQUID_LINE: <span class="log-val">ACTIVE / FLOWING (ORANGE)</span></div>
+          <div class="log-line">:: GRADIENT_MAP: <span class="log-val">NORMALIZED (THERMAL ZONE 1)</span></div>
+        `,
+        temp: '32.4°C (NOM)',
+        load: '88.5% (HIGH)',
+        cycles: '2,941,102 (ACT)',
+        glowText: 'FLOWING'
       }
     };
 

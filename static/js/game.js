@@ -649,9 +649,56 @@
   }
 
   // ─── GRID ────────────────────────────────────────────────
-  function drawGrid(ctx, W, H, frame) {
+  function drawGrid(ctx, W, H, frame, robot = null) {
     ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, W, H);
+
+    // ─── AI-004: Red-Blue Piping Flow Indicator ───
+    const pipeY1 = 60;
+    const pipeY2 = 68;
+
+    // Background insulation tracks
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#1e3a8a'; // Cold line insulation
+    ctx.beginPath();
+    ctx.moveTo(0, pipeY1);
+    ctx.lineTo(W, pipeY1);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#7c2d12'; // Hot line insulation
+    ctx.beginPath();
+    ctx.moveTo(0, pipeY2);
+    ctx.lineTo(W, pipeY2);
+    ctx.stroke();
+
+    // Flowing inner cores
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    
+    // Check if AC is active
+    const flowActive = robot && robot.acActive;
+    const flowOffset = flowActive ? (frame * 1.5) % 24 : 0;
+
+    // Suction Flow (Cyan)
+    ctx.strokeStyle = '#06b6d4';
+    ctx.setLineDash([8, 16]);
+    ctx.lineDashOffset = flowOffset;
+    ctx.beginPath();
+    ctx.moveTo(0, pipeY1);
+    ctx.lineTo(W, pipeY1);
+    ctx.stroke();
+
+    // Discharge Flow (Orange/Red)
+    ctx.strokeStyle = '#f97316';
+    ctx.setLineDash([8, 16]);
+    ctx.lineDashOffset = -flowOffset;
+    ctx.beginPath();
+    ctx.moveTo(0, pipeY2);
+    ctx.lineTo(W, pipeY2);
+    ctx.stroke();
+    
+    // Reset dashes
+    ctx.setLineDash([]);
 
     const spacing = 40;
     for (let x = 0; x <= W; x += spacing) {
@@ -730,7 +777,8 @@
     let npcs = [
       new NPC('NPC-001', 'Agent Clog-001', 220, H - 120 - 44, 'BAS Guild', 'NPC-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps.'),
       new NPC('NPC-002', 'Agent Clog-002', 380, H - 120 - 44, 'Refrigeration Scholars', 'AI-002 establishes the process where to avoid liquid slugback hazards occurs by tracking the crankcase heater activation cycle.'),
-      new NPC('NPC-003', 'Agent Clog-003', 540, H - 120 - 44, 'BAS Guild', 'AI-003 configures the engine to evaluates the suction line superheat so that it is possible to open stuck expansion valve steps.')
+      new NPC('NPC-003', 'Agent Clog-003', 540, H - 120 - 44, 'BAS Guild', 'AI-003 configures the engine to evaluates the suction line superheat so that it is possible to open stuck expansion valve steps.'),
+      new NPC('NPC-004', 'Agent Clog-004', 700, H - 120 - 44, 'Refrigeration Scholars', 'AI-004 maps where red-blue piping indicator flows is updated during inspectsing cycles to map thermal zone gradients.')
     ];
 
     // Key handlers
@@ -784,7 +832,7 @@
       }
 
       // Draw
-      drawGrid(ctx, W, H, frame);
+      drawGrid(ctx, W, H, frame, robot);
 
       // Particles behind robot
       particles.forEach(p => p.draw(ctx));

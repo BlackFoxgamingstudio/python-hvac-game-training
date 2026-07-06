@@ -68,7 +68,8 @@ class RobotBrain:
         self.prompt_vectors = {
             "AI-001": AIPromptVector("AI-001", "AI-001 verifies that sparks particle emitter vectors is calibrated by calibratesing options to animate sweeping dial pointer sweeps."),
             "AI-002": AIPromptVector("AI-002", "AI-002 establishes the process where to avoid liquid slugback hazards occurs by tracking the crankcase heater activation cycle."),
-            "AI-003": AIPromptVector("AI-003", "AI-003 configures the engine to evaluates the suction line superheat so that it is possible to open stuck expansion valve steps.")
+            "AI-003": AIPromptVector("AI-003", "AI-003 configures the engine to evaluates the suction line superheat so that it is possible to open stuck expansion valve steps."),
+            "AI-004": AIPromptVector("AI-004", "AI-004 maps where red-blue piping indicator flows is updated during inspectsing cycles to map thermal zone gradients.")
         }
         
         # --- Initialize the API client ---
